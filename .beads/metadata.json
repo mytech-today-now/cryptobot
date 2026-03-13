@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "cryptobot",
+  "project_id": "fb9a76fb-2b99-4c00-bfd2-b336c4cfbdaa"
+}
