@@ -36,3 +36,6 @@ Thumbs.db
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# Augment Extensions
+.augment/extensions.json

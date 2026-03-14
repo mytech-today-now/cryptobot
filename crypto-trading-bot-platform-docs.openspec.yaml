@@ -1,0 +1,2017 @@
+openspec: 1.0.0
+info:
+  title: Crypto Trading Bot Platform Documentation Generation Specification
+  version: 2.0.0
+  description: |
+    OpenSpec specification for generating comprehensive documentation artifacts for the 
+    Crypto Trading Bot Platform (TRADE-001 Epic). This specification defines the structure,
+    templates, and generation rules for all project documentation including user stories,
+    technical design documents, testing artifacts, deployment guides, and operational runbooks.
+  created: 2026-03-12
+  owner: Development Team Lead
+  confidentiality: Internal Use Only
+  
+metadata:
+  epic_id: TRADE-001
+  epic_name: Crypto Trading Bot Platform Development
+  target_release: Q2 2026 (Version 1.0)
+  total_story_points: 207
+  total_sprints: 9
+  sprint_duration: 2 weeks
+  team_size: 8-10 developers
+  output_directory: G:\_kyle\temp_documents\GitHub\financial\ai-prompts\crypto-bot
+  
+generation_config:
+  file_naming_convention: "{document_type}-{story_id}-{title_slug}.md"
+  date_format: "YYYY-MM-DD"
+  version_format: "semantic" # major.minor.patch
+  auto_generate_toc: true
+  include_metadata_header: true
+  markdown_flavor: "GitHub Flavored Markdown"
+  diagram_format: "mermaid"
+  
+# ============================================================================
+# SECTION 1: USER STORIES GENERATION
+# ============================================================================
+user_stories:
+  description: |
+    Break down the epic into individual user stories. Each story should be small enough 
+    to complete in one sprint (1-5 days). Stories follow the format: 
+    "As a [role], I need [capability], so that [benefit]"
+    
+  output_files:
+    - pattern: "user-story-{story_id}-{title_slug}.md"
+      count: 14 # One file per story from TRADE-101 to TRADE-801
+      
+  template_structure:
+    metadata:
+      fields:
+        - story_id: "Unique identifier (e.g., TRADE-101)"
+        - story_name: "Descriptive title"
+        - story_type: "Feature | Bug | Technical Debt | Spike"
+        - story_points: "Fibonacci scale (1, 2, 3, 5, 8, 13, 21)"
+        - priority: "Critical (P0) | High (P1) | Medium (P2) | Low (P3)"
+        - sprint: "Target sprint number"
+        - assignee: "Team or individual"
+        - reporter: "Story creator"
+        - labels: "Comma-separated tags"
+        - components: "Affected system components"
+        - estimated_hours: "Time estimate range"
+        - risk_level: "High | Medium | Low"
+        
+    sections:
+      - name: "User Story"
+        format: |
+          **As a** [role]
+          **I need** [capability]
+          **So that** [benefit]
+          
+      - name: "Business Context"
+        description: "Why this story matters, business impact, cost of not doing it"
+        
+      - name: "Acceptance Criteria"
+        format: "Given-When-Then format with checkboxes"
+        requirements:
+          - minimum_criteria: 5
+          - maximum_criteria: 15
+          - format: "- [ ] **Given** ... **When** ... **Then** ... **And** ..."
+          
+      - name: "Technical Requirements"
+        subsections:
+          - "Architecture & Design"
+          - "Technology Stack"
+          - "Performance Requirements"
+          - "Security Requirements"
+          - "Data Storage"
+          - "API Specifications"
+          
+      - name: "Dependencies"
+        format: "Table with columns: Dependency ID, Name, Type, Criticality, Notes"
+        types:
+          - "Blocks: This story blocks other stories"
+          - "Blocked By: This story is blocked by other stories"
+          - "Soft Dependency: Preferred but not required"
+          
+      - name: "Testing Requirements"
+        subsections:
+          - "Unit Testing (>90% coverage)"
+          - "Integration Testing"
+          - "Load Testing"
+          - "Scenario-Based Testing"
+          - "Acceptance Testing"
+          
+      - name: "Definition of Done"
+        format: "Checklist of completion criteria"
+        required_items:
+          - "All acceptance criteria met"
+          - "Code reviewed and approved"
+          - "Tests passing (unit, integration, load)"
+          - "Documentation updated"
+          - "Security review completed"
+          - "Deployed to staging"
+          - "Product owner acceptance"
+          
+  story_list:
+    - id: TRADE-101
+      name: "Order Execution Engine"
+      points: 13
+      sprint: 3
+      
+    - id: TRADE-102
+      name: "Trading Strategy Framework"
+      points: 21
+      sprint: 3-4
+      
+    - id: TRADE-103
+      name: "Technical Indicator Library"
+      points: 8
+      sprint: 1-2
+      
+    - id: TRADE-104
+      name: "Risk Management System"
+      points: 13
+      sprint: 4
+      
+    - id: TRADE-105
+      name: "Account Management & Portfolio Tracking"
+      points: 13
+      sprint: 4-5
+      
+    - id: TRADE-106
+      name: "Tax Liability Tracking & Reporting"
+      points: 8
+      sprint: 5
+
+    - id: TRADE-107
+      name: "Security & Permissions System"
+      points: 13
+      sprint: 1-2
+
+    - id: TRADE-201
+      name: "Exchange API Integration"
+      points: 21
+      sprint: 2-3
+
+    - id: TRADE-301
+      name: "Database Schema Design"
+      points: 8
+      sprint: 1
+
+    - id: TRADE-401
+      name: "Backtesting Engine"
+      points: 21
+      sprint: 5-6
+
+    - id: TRADE-501
+      name: "Monitoring & Alerting System"
+      points: 13
+      sprint: 6
+
+    - id: TRADE-601
+      name: "Deployment & Infrastructure"
+      points: 13
+      sprint: 6
+
+    - id: TRADE-701
+      name: "User Interface & Dashboard"
+      points: 21
+      sprint: 7-8
+
+    - id: TRADE-801
+      name: "Mobile Application Integration"
+      points: 13
+      sprint: 9
+
+# ============================================================================
+# SECTION 2: TECHNICAL DESIGN DOCUMENTS
+# ============================================================================
+technical_design_documents:
+  description: |
+    Comprehensive technical design documentation created before implementation.
+    These documents guide development and serve as reference for architecture decisions.
+
+  output_files:
+    architecture_decision_records:
+      pattern: "adr-{number}-{title_slug}.md"
+      description: "Document key technical decisions with context, options, and rationale"
+      template_sections:
+        - "Status: Proposed | Accepted | Deprecated | Superseded"
+        - "Context: What is the issue we're seeing that is motivating this decision?"
+        - "Decision: What is the change that we're proposing/doing?"
+        - "Consequences: What becomes easier or more difficult to do because of this change?"
+        - "Alternatives Considered: What other options were evaluated?"
+        - "References: Links to related documents, discussions, or resources"
+
+      records:
+        - number: "001"
+          title: "Use CCXT Library for Exchange Integration"
+          status: "Accepted"
+
+        - number: "002"
+          title: "PostgreSQL for Primary Database"
+          status: "Accepted"
+
+        - number: "003"
+          title: "Event-Driven Architecture for Order Processing"
+          status: "Accepted"
+
+        - number: "004"
+          title: "Redis for Real-Time Data Caching"
+          status: "Accepted"
+
+        - number: "005"
+          title: "Kubernetes for Container Orchestration"
+          status: "Accepted"
+
+        - number: "006"
+          title: "WebSocket for Real-Time UI Updates"
+          status: "Accepted"
+
+        - number: "007"
+          title: "AES-256 for API Key Encryption"
+          status: "Accepted"
+
+        - number: "008"
+          title: "Microservices vs Monolithic Architecture"
+          status: "Accepted"
+          decision: "Start with modular monolith, migrate to microservices in Phase 2"
+
+    api_specifications:
+      pattern: "api-spec-{component}.yaml"
+      format: "OpenAPI 3.0"
+      description: "REST API specifications for all backend services"
+
+      components:
+        - name: "order-execution-api"
+          endpoints:
+            - "POST /api/v1/orders"
+            - "GET /api/v1/orders/{orderId}"
+            - "DELETE /api/v1/orders/{orderId}"
+            - "GET /api/v1/orders"
+            - "POST /api/v1/orders/batch"
+
+        - name: "strategy-management-api"
+          endpoints:
+            - "POST /api/v1/strategies"
+            - "GET /api/v1/strategies/{strategyId}"
+            - "PUT /api/v1/strategies/{strategyId}"
+            - "DELETE /api/v1/strategies/{strategyId}"
+            - "POST /api/v1/strategies/{strategyId}/enable"
+            - "POST /api/v1/strategies/{strategyId}/disable"
+            - "GET /api/v1/strategies/{strategyId}/performance"
+
+        - name: "portfolio-api"
+          endpoints:
+            - "GET /api/v1/portfolio/holdings"
+            - "GET /api/v1/portfolio/performance"
+            - "GET /api/v1/portfolio/transactions"
+            - "GET /api/v1/portfolio/cost-basis"
+
+        - name: "risk-management-api"
+          endpoints:
+            - "GET /api/v1/risk/exposure"
+            - "GET /api/v1/risk/limits"
+            - "PUT /api/v1/risk/limits"
+            - "POST /api/v1/risk/circuit-breaker"
+
+        - name: "tax-reporting-api"
+          endpoints:
+            - "GET /api/v1/tax/liability"
+            - "GET /api/v1/tax/reports/{year}"
+            - "POST /api/v1/tax/reports/generate"
+
+    database_schema_design:
+      pattern: "database-schema-{component}.md"
+      description: "ERD diagrams and table definitions"
+
+      components:
+        - name: "core-schema"
+          tables:
+            - "users"
+            - "accounts"
+            - "exchanges"
+            - "api_keys"
+            - "orders"
+            - "trades"
+            - "positions"
+            - "balances"
+
+        - name: "strategy-schema"
+          tables:
+            - "strategies"
+            - "strategy_configs"
+            - "strategy_signals"
+            - "strategy_performance"
+
+        - name: "risk-schema"
+          tables:
+            - "risk_limits"
+            - "risk_events"
+            - "circuit_breakers"
+
+        - name: "tax-schema"
+          tables:
+            - "tax_lots"
+            - "tax_events"
+            - "tax_reports"
+
+      diagram_format: "mermaid_erd"
+      include_indexes: true
+      include_constraints: true
+      include_sample_data: true
+
+    system_architecture_diagrams:
+      pattern: "architecture-{diagram_type}.md"
+      description: "Component diagrams, data flow diagrams, deployment diagrams"
+
+      diagrams:
+        - type: "component-diagram"
+          title: "System Component Architecture"
+          format: "mermaid"
+          includes:
+            - "Frontend (React)"
+            - "API Gateway"
+            - "Order Execution Service"
+            - "Strategy Engine"
+            - "Risk Management Service"
+            - "Portfolio Service"
+            - "Exchange Integration Layer"
+            - "Database (PostgreSQL)"
+            - "Cache (Redis)"
+            - "Message Queue (RabbitMQ)"
+            - "Monitoring (Prometheus/Grafana)"
+
+        - type: "data-flow-diagram"
+          title: "Order Execution Data Flow"
+          format: "mermaid"
+          shows:
+            - "User initiates order"
+            - "Pre-trade validation"
+            - "Risk checks"
+            - "Exchange submission"
+            - "Order status updates"
+            - "Portfolio updates"
+            - "Audit logging"
+
+        - type: "deployment-diagram"
+          title: "Production Deployment Architecture"
+          format: "mermaid"
+          includes:
+            - "Kubernetes cluster"
+            - "Load balancer"
+            - "Application pods"
+            - "Database cluster"
+            - "Redis cluster"
+            - "Monitoring stack"
+            - "Backup systems"
+
+    integration_specifications:
+      pattern: "integration-spec-{exchange}.md"
+      description: "Third-party API integration details for each exchange"
+
+      exchanges:
+        - name: "binance"
+          apis:
+            - "REST API v3"
+            - "WebSocket Streams"
+            - "Futures API"
+          authentication: "HMAC SHA256"
+          rate_limits: "1200 requests/minute"
+
+        - name: "coinbase-pro"
+          apis:
+            - "REST API"
+            - "WebSocket Feed"
+          authentication: "API Key + Secret + Passphrase"
+          rate_limits: "10 requests/second"
+
+        - name: "kraken"
+          apis:
+            - "REST API"
+            - "WebSocket API"
+          authentication: "API Key + Private Key"
+          rate_limits: "15-20 requests/second"
+
+        - name: "gemini"
+          apis:
+            - "REST API v1"
+            - "WebSocket API"
+          authentication: "API Key + Secret"
+          rate_limits: "120 requests/minute"
+
+        - name: "bybit"
+          apis:
+            - "REST API v5"
+            - "WebSocket Streams"
+          authentication: "API Key + Secret"
+          rate_limits: "100 requests/second"
+
+        - name: "okx"
+          apis:
+            - "REST API v5"
+            - "WebSocket API"
+          authentication: "API Key + Secret + Passphrase"
+          rate_limits: "20 requests/2 seconds"
+
+# ============================================================================
+# SECTION 3: SPRINT PLANNING DOCUMENTS
+# ============================================================================
+sprint_planning_documents:
+  description: |
+    Sprint-specific planning documents including backlog, goals, capacity planning,
+    and task breakdowns for each of the 9 sprints.
+
+  output_files:
+    sprint_backlog:
+      pattern: "sprint-{sprint_number}-backlog.md"
+      count: 9
+
+      template_sections:
+        - name: "Sprint Overview"
+          fields:
+            - "Sprint Number"
+            - "Sprint Duration (Weeks)"
+            - "Sprint Goal"
+            - "Team Capacity (Story Points)"
+            - "Committed Story Points"
+            - "Velocity Target"
+
+        - name: "Selected Stories"
+          format: "Table with Story ID, Name, Points, Assignee, Status"
+
+        - name: "Sprint Goals"
+          description: "Clear objectives for what the sprint will achieve"
+          format: "Bulleted list of 3-5 SMART goals"
+
+        - name: "Capacity Planning"
+          fields:
+            - "Team Members Available"
+            - "Total Available Hours"
+            - "Planned Velocity"
+            - "Buffer for Unplanned Work (20%)"
+
+        - name: "Task Breakdown"
+          description: "Stories broken into technical tasks/sub-tasks"
+          format: |
+            ### Story: {Story ID} - {Story Name}
+            - [ ] Task 1: {Description} (Estimate: {hours}h, Assignee: {name})
+            - [ ] Task 2: {Description} (Estimate: {hours}h, Assignee: {name})
+
+        - name: "Dependencies & Risks"
+          subsections:
+            - "Blocking Dependencies"
+            - "External Dependencies"
+            - "Identified Risks"
+            - "Mitigation Plans"
+
+        - name: "Definition of Done"
+          description: "Sprint-level completion criteria"
+
+    sprint_goals:
+      sprints:
+        - number: 1
+          weeks: "1-2"
+          goal: "Establish core infrastructure and security foundation"
+          stories: ["TRADE-301", "TRADE-107", "TRADE-103"]
+          deliverables:
+            - "Database schema deployed to dev environment"
+            - "Security framework implemented"
+            - "Core technical indicators"
+
+        - number: 2
+          weeks: "3-4"
+          goal: "Enable basic order execution capabilities"
+          stories: ["TRADE-107", "TRADE-201", "TRADE-103"]
+          deliverables:
+            - "Security system complete"
+            - "Integration with 3+ exchanges"
+            - "All 30+ technical indicators"
+
+        - number: 3
+          weeks: "5-6"
+          goal: "Complete order execution and begin strategy implementation"
+          stories: ["TRADE-201", "TRADE-101", "TRADE-102"]
+          deliverables:
+            - "All exchange integrations complete"
+            - "All order types implemented"
+            - "Strategy framework with 5+ strategies"
+
+        - number: 4
+          weeks: "7-8"
+          goal: "Implement risk controls and expand strategy library"
+          stories: ["TRADE-102", "TRADE-104", "TRADE-105"]
+          deliverables:
+            - "20+ trading strategies"
+            - "Risk management system"
+            - "Portfolio tracking"
+
+        - number: 5
+          weeks: "9-10"
+          goal: "Complete portfolio management and enable strategy validation"
+          stories: ["TRADE-105", "TRADE-106", "TRADE-401"]
+          deliverables:
+            - "Cost basis calculation"
+            - "Tax reporting"
+            - "Backtesting engine"
+
+        - number: 6
+          weeks: "11-12"
+          goal: "Complete backtesting and prepare for production deployment"
+          stories: ["TRADE-401", "TRADE-501", "TRADE-601"]
+          deliverables:
+            - "Backtesting with optimization"
+            - "Monitoring dashboards"
+            - "Production infrastructure"
+
+        - number: 7
+          weeks: "13-14"
+          goal: "Develop core dashboard and control features"
+          stories: ["TRADE-701", "TRADE-803"]
+          deliverables:
+            - "Dashboard overview"
+            - "Strategy management UI"
+            - "Performance optimization"
+
+        - number: 8
+          weeks: "15-16"
+          goal: "Complete dashboard with analytics and visualizations"
+          stories: ["TRADE-701"]
+          deliverables:
+            - "Analytics dashboard"
+            - "Risk dashboard"
+            - "Tax reporting interface"
+
+        - number: 9
+          weeks: "17-18"
+          goal: "Launch mobile app and finalize platform"
+          stories: ["TRADE-801", "TRADE-802"]
+          deliverables:
+            - "Mobile app (iOS/Android)"
+            - "Push notifications"
+            - "Complete documentation"
+
+# ============================================================================
+# SECTION 4: DEVELOPMENT ARTIFACTS
+# ============================================================================
+development_artifacts:
+  description: |
+    Code documentation, README files, configuration documentation, and operational runbooks.
+
+  output_files:
+    code_documentation:
+      pattern: "code-docs-{component}.md"
+      description: "Inline documentation standards and API reference"
+
+      components:
+        - name: "order-execution"
+          includes:
+            - "Class documentation"
+            - "Method signatures"
+            - "Parameter descriptions"
+            - "Return value specifications"
+            - "Exception handling"
+            - "Usage examples"
+
+        - name: "strategy-framework"
+          includes:
+            - "Base strategy class"
+            - "Strategy lifecycle"
+            - "Signal generation"
+            - "Custom strategy development guide"
+
+        - name: "risk-management"
+          includes:
+            - "Risk calculation methods"
+            - "Limit enforcement"
+            - "Circuit breaker logic"
+
+    readme_files:
+      pattern: "README-{component}.md"
+
+      files:
+        - name: "README-main"
+          path: "README.md"
+          sections:
+            - "Project Overview"
+            - "Features"
+            - "Architecture"
+            - "Quick Start"
+            - "Installation"
+            - "Configuration"
+            - "Usage Examples"
+            - "API Documentation"
+            - "Contributing"
+            - "License"
+
+        - name: "README-backend"
+          path: "backend/README.md"
+          sections:
+            - "Backend Architecture"
+            - "Setup Instructions"
+            - "Environment Variables"
+            - "Database Migrations"
+            - "Running Tests"
+            - "API Endpoints"
+
+        - name: "README-frontend"
+          path: "frontend/README.md"
+          sections:
+            - "Frontend Stack"
+            - "Development Setup"
+            - "Component Structure"
+            - "State Management"
+            - "Styling Guidelines"
+
+    configuration_documentation:
+      pattern: "config-{environment}.md"
+
+      environments:
+        - name: "development"
+          includes:
+            - "Local development setup"
+            - "Docker Compose configuration"
+            - "Environment variables"
+            - "Database setup"
+            - "Exchange sandbox credentials"
+
+        - name: "staging"
+          includes:
+            - "Staging environment setup"
+            - "CI/CD pipeline configuration"
+            - "Kubernetes manifests"
+            - "Secrets management"
+
+        - name: "production"
+          includes:
+            - "Production deployment guide"
+            - "Infrastructure as Code (Terraform)"
+            - "Security hardening"
+            - "Backup and recovery"
+            - "Monitoring and alerting"
+
+    runbooks:
+      pattern: "runbook-{procedure}.md"
+      description: "Operational procedures for common tasks"
+
+      procedures:
+        - name: "deployment"
+          title: "Production Deployment Runbook"
+          sections:
+            - "Pre-deployment checklist"
+            - "Deployment steps"
+            - "Smoke tests"
+            - "Rollback procedure"
+            - "Post-deployment verification"
+
+        - name: "incident-response"
+          title: "Incident Response Runbook"
+          sections:
+            - "Incident classification"
+            - "Escalation procedures"
+            - "Common issues and solutions"
+            - "Emergency contacts"
+            - "Post-incident review"
+
+        - name: "database-maintenance"
+          title: "Database Maintenance Runbook"
+          sections:
+            - "Backup procedures"
+            - "Restore procedures"
+            - "Index optimization"
+            - "Query performance tuning"
+            - "Partition management"
+
+        - name: "exchange-integration"
+          title: "Exchange Integration Runbook"
+          sections:
+            - "Adding new exchange"
+            - "API key rotation"
+            - "Rate limit handling"
+            - "WebSocket reconnection"
+            - "Exchange downtime handling"
+
+# ============================================================================
+# SECTION 5: TESTING DOCUMENTATION
+# ============================================================================
+testing_documentation:
+  description: |
+    Comprehensive testing documentation including test plans, test cases, test data,
+    and bug reports.
+
+  output_files:
+    test_plans:
+      pattern: "test-plan-{story_id}.md"
+      description: "Overall testing strategy for each story"
+
+      template_sections:
+        - name: "Test Plan Overview"
+          fields:
+            - "Story ID and Name"
+            - "Test Plan Version"
+            - "Test Lead"
+            - "Test Environment"
+            - "Test Schedule"
+
+        - name: "Test Scope"
+          subsections:
+            - "In Scope"
+            - "Out of Scope"
+            - "Testing Types"
+
+        - name: "Test Strategy"
+          testing_types:
+            - type: "Unit Testing"
+              coverage_target: ">90%"
+              tools: ["pytest", "Jest", "unittest"]
+
+            - type: "Integration Testing"
+              coverage_target: ">80%"
+              tools: ["pytest", "Postman", "Newman"]
+
+            - type: "Load Testing"
+              tools: ["Locust", "JMeter", "k6"]
+              targets:
+                - "100+ orders/second"
+                - "1000+ concurrent users"
+                - "<100ms response time"
+
+            - type: "Security Testing"
+              tools: ["OWASP ZAP", "Bandit", "Safety"]
+              checks:
+                - "SQL injection"
+                - "XSS vulnerabilities"
+                - "Authentication bypass"
+                - "API key exposure"
+
+            - type: "Acceptance Testing"
+              duration: "2 weeks"
+              participants: "3-5 beta users"
+              success_criteria: ">4.5/5 satisfaction"
+
+        - name: "Test Environment Setup"
+          requirements:
+            - "Exchange sandbox accounts"
+            - "Test database"
+            - "Mock data generators"
+            - "CI/CD integration"
+
+        - name: "Entry and Exit Criteria"
+          entry_criteria:
+            - "Code complete and reviewed"
+            - "Test environment ready"
+            - "Test data prepared"
+
+          exit_criteria:
+            - "All test cases executed"
+            - "No critical/high bugs"
+            - "<5 medium bugs"
+            - "Coverage targets met"
+
+    test_cases:
+      pattern: "test-cases-{story_id}-{test_type}.md"
+      description: "Detailed test scenarios (manual and automated)"
+
+      template_structure:
+        - name: "Test Case Header"
+          fields:
+            - "Test Case ID"
+            - "Test Case Name"
+            - "Story ID"
+            - "Test Type (Unit/Integration/Load/Security/Acceptance)"
+            - "Priority (Critical/High/Medium/Low)"
+            - "Automated (Yes/No)"
+            - "Test Data Required"
+
+        - name: "Test Case Details"
+          fields:
+            - "Preconditions"
+            - "Test Steps"
+            - "Expected Results"
+            - "Actual Results"
+            - "Status (Pass/Fail/Blocked/Skipped)"
+            - "Notes"
+
+      test_case_examples:
+        - id: "TC-101-001"
+          name: "Market Order Execution - Happy Path"
+          story: "TRADE-101"
+          type: "Integration"
+          priority: "Critical"
+          automated: true
+
+        - id: "TC-101-002"
+          name: "Limit Order Partial Fill Handling"
+          story: "TRADE-101"
+          type: "Integration"
+          priority: "High"
+          automated: true
+
+        - id: "TC-102-001"
+          name: "Arbitrage Strategy Signal Generation"
+          story: "TRADE-102"
+          type: "Unit"
+          priority: "Critical"
+          automated: true
+
+        - id: "TC-104-001"
+          name: "Circuit Breaker Activation on Drawdown"
+          story: "TRADE-104"
+          type: "Integration"
+          priority: "Critical"
+          automated: true
+
+    test_data:
+      pattern: "test-data-{data_type}.json"
+      description: "Sample data sets for testing"
+
+      data_types:
+        - name: "market-data"
+          includes:
+            - "Historical OHLCV data"
+            - "Order book snapshots"
+            - "Trade tick data"
+
+        - name: "user-accounts"
+          includes:
+            - "Test user profiles"
+            - "Account balances"
+            - "API credentials (sandbox)"
+
+        - name: "orders"
+          includes:
+            - "Sample order requests"
+            - "Order execution responses"
+            - "Partial fill scenarios"
+
+        - name: "strategies"
+          includes:
+            - "Strategy configurations"
+            - "Backtesting scenarios"
+            - "Performance metrics"
+
+    bug_reports:
+      pattern: "bug-report-template.md"
+      description: "Issues found during testing (tracked in JIRA)"
+
+      template_fields:
+        - "Bug ID"
+        - "Summary"
+        - "Description"
+        - "Steps to Reproduce"
+        - "Expected Behavior"
+        - "Actual Behavior"
+        - "Severity (Critical/High/Medium/Low)"
+        - "Priority (P0/P1/P2/P3)"
+        - "Environment"
+        - "Attachments (Screenshots, Logs)"
+        - "Related Stories"
+
+# ============================================================================
+# SECTION 6: QUALITY ASSURANCE DOCUMENTS
+# ============================================================================
+quality_assurance_documents:
+  description: |
+    Quality assurance documentation including definition of done, acceptance test results,
+    code review checklists, and performance test results.
+
+  output_files:
+    definition_of_done:
+      pattern: "definition-of-done.md"
+      description: "Checklist for story completion"
+
+      checklist_items:
+        code_quality:
+          - "Code follows style guide and conventions"
+          - "No code smells or anti-patterns"
+          - "Proper error handling implemented"
+          - "Logging added for debugging"
+          - "No hardcoded values or secrets"
+
+        testing:
+          - "Unit test coverage >90%"
+          - "All unit tests passing"
+          - "Integration tests passing"
+          - "Load tests passing (if applicable)"
+          - "Security tests passing"
+          - "Manual testing completed"
+
+        code_review:
+          - "Code reviewed by 2+ senior developers"
+          - "All review comments addressed"
+          - "No unresolved discussions"
+          - "Approved by tech lead"
+
+        documentation:
+          - "Code comments added"
+          - "API documentation updated"
+          - "README updated (if needed)"
+          - "Architecture diagrams updated (if needed)"
+          - "User documentation updated (if needed)"
+
+        security:
+          - "Security review completed"
+          - "No high/critical vulnerabilities"
+          - "Secrets properly managed"
+          - "Authentication/authorization verified"
+          - "Input validation implemented"
+
+        deployment:
+          - "Deployed to dev environment"
+          - "Deployed to staging environment"
+          - "Smoke tests passed in staging"
+          - "Performance benchmarks met"
+          - "Monitoring and alerting configured"
+
+        acceptance:
+          - "All acceptance criteria met"
+          - "Product owner acceptance obtained"
+          - "Demo completed (if required)"
+          - "Stakeholder sign-off received"
+
+    acceptance_test_results:
+      pattern: "acceptance-test-results-{story_id}.md"
+      description: "Evidence that acceptance criteria are met"
+
+      template_sections:
+        - name: "Test Summary"
+          fields:
+            - "Story ID and Name"
+            - "Test Date"
+            - "Tester Name"
+            - "Environment"
+            - "Overall Result (Pass/Fail)"
+
+        - name: "Acceptance Criteria Results"
+          format: |
+            ### AC-{ID}: {Criteria Description}
+            - **Status**: Pass/Fail
+            - **Evidence**: Screenshot/Log/Video
+            - **Notes**: Additional observations
+
+        - name: "User Feedback"
+          includes:
+            - "Usability observations"
+            - "Performance feedback"
+            - "Suggestions for improvement"
+
+    code_review_checklists:
+      pattern: "code-review-checklist.md"
+      description: "Standards for peer reviews"
+
+      checklist_categories:
+        design:
+          - "Code follows SOLID principles"
+          - "Appropriate design patterns used"
+          - "No over-engineering or premature optimization"
+          - "Separation of concerns maintained"
+          - "DRY principle followed"
+
+        readability:
+          - "Code is self-documenting"
+          - "Variable and function names are descriptive"
+          - "Complex logic has explanatory comments"
+          - "Consistent formatting and style"
+          - "No commented-out code"
+
+        functionality:
+          - "Code meets acceptance criteria"
+          - "Edge cases handled"
+          - "Error handling is comprehensive"
+          - "No obvious bugs or logic errors"
+          - "Performance considerations addressed"
+
+        testing:
+          - "Adequate test coverage"
+          - "Tests are meaningful and not trivial"
+          - "Tests follow AAA pattern (Arrange-Act-Assert)"
+          - "Mock objects used appropriately"
+          - "Test names are descriptive"
+
+        security:
+          - "No SQL injection vulnerabilities"
+          - "No XSS vulnerabilities"
+          - "Sensitive data encrypted"
+          - "Authentication/authorization checked"
+          - "Input validation implemented"
+
+        performance:
+          - "No N+1 query problems"
+          - "Database queries optimized"
+          - "Caching used where appropriate"
+          - "No memory leaks"
+          - "Efficient algorithms used"
+
+    performance_test_results:
+      pattern: "performance-test-results-{story_id}.md"
+      description: "Load testing, benchmarking data"
+
+      template_sections:
+        - name: "Test Configuration"
+          fields:
+            - "Test Tool (Locust/JMeter/k6)"
+            - "Test Duration"
+            - "Concurrent Users/Threads"
+            - "Ramp-up Period"
+            - "Test Environment"
+
+        - name: "Performance Metrics"
+          metrics:
+            - metric: "Response Time (p50)"
+              target: "<100ms"
+
+            - metric: "Response Time (p95)"
+              target: "<200ms"
+
+            - metric: "Response Time (p99)"
+              target: "<500ms"
+
+            - metric: "Throughput"
+              target: "100+ requests/second"
+
+            - metric: "Error Rate"
+              target: "<0.1%"
+
+            - metric: "CPU Utilization"
+              target: "<70%"
+
+            - metric: "Memory Utilization"
+              target: "<2GB per instance"
+
+            - metric: "Database Connections"
+              target: "<100 concurrent"
+
+        - name: "Test Results"
+          includes:
+            - "Performance graphs"
+            - "Bottleneck analysis"
+            - "Resource utilization charts"
+            - "Recommendations"
+
+# ============================================================================
+# SECTION 7: DEPLOYMENT & OPERATIONS DOCUMENTS
+# ============================================================================
+deployment_operations_documents:
+  description: |
+    Deployment plans, release notes, rollback procedures, and monitoring setup.
+
+  output_files:
+    deployment_plans:
+      pattern: "deployment-plan-{release_version}.md"
+      description: "Step-by-step deployment procedures"
+
+      template_sections:
+        - name: "Deployment Overview"
+          fields:
+            - "Release Version"
+            - "Deployment Date"
+            - "Deployment Lead"
+            - "Deployment Window"
+            - "Rollback Deadline"
+
+        - name: "Pre-Deployment Checklist"
+          items:
+            - "All tests passing in staging"
+            - "Database migrations tested"
+            - "Backup completed"
+            - "Rollback plan reviewed"
+            - "Stakeholders notified"
+            - "Monitoring dashboards ready"
+            - "On-call team briefed"
+
+        - name: "Deployment Steps"
+          format: |
+            1. **Step**: {Description}
+               - **Command**: `{command}`
+               - **Expected Output**: {output}
+               - **Duration**: {time}
+               - **Rollback**: {rollback_command}
+
+        - name: "Smoke Tests"
+          tests:
+            - "Health check endpoint returns 200"
+            - "Database connectivity verified"
+            - "Exchange API connections working"
+            - "WebSocket connections established"
+            - "Critical user flows working"
+
+        - name: "Post-Deployment Verification"
+          checks:
+            - "Application logs clean (no errors)"
+            - "Performance metrics within targets"
+            - "No increase in error rates"
+            - "User-facing features working"
+            - "Monitoring alerts not triggered"
+
+    release_notes:
+      pattern: "release-notes-{version}.md"
+      description: "What's new, changed, or fixed in each release"
+
+      template_sections:
+        - name: "Release Information"
+          fields:
+            - "Version Number"
+            - "Release Date"
+            - "Release Type (Major/Minor/Patch)"
+            - "Git Tag"
+            - "Git Commit Hash"
+
+        - name: "New Features"
+          format: |
+            - **{Feature Name}** ({Story ID})
+              - Description: {description}
+              - Benefits: {benefits}
+              - Documentation: {link}
+
+        - name: "Improvements"
+          format: |
+            - **{Improvement Name}** ({Story ID})
+              - Description: {description}
+              - Impact: {impact}
+
+        - name: "Bug Fixes"
+          format: |
+            - **{Bug Summary}** ({Bug ID})
+              - Issue: {description}
+              - Resolution: {fix_description}
+
+        - name: "Breaking Changes"
+          format: |
+            - **{Change Description}**
+              - Impact: {impact}
+              - Migration Guide: {migration_steps}
+
+        - name: "Deprecations"
+          format: |
+            - **{Deprecated Feature}**
+              - Reason: {reason}
+              - Alternative: {alternative}
+              - Removal Date: {date}
+
+        - name: "Known Issues"
+          format: |
+            - **{Issue Description}** ({Bug ID})
+              - Workaround: {workaround}
+              - Expected Fix: {version}
+
+    rollback_procedures:
+      pattern: "rollback-procedure-{release_version}.md"
+      description: "How to revert if deployment fails"
+
+      template_sections:
+        - name: "Rollback Overview"
+          fields:
+            - "Release Version to Rollback"
+            - "Previous Stable Version"
+            - "Rollback Trigger Criteria"
+            - "Rollback Time Estimate"
+
+        - name: "Rollback Decision Criteria"
+          triggers:
+            - "Critical bugs affecting >50% of users"
+            - "Data corruption detected"
+            - "Performance degradation >50%"
+            - "Security vulnerability discovered"
+            - "System unavailability >15 minutes"
+
+        - name: "Rollback Steps"
+          format: |
+            1. **Step**: {Description}
+               - **Command**: `{command}`
+               - **Expected Output**: {output}
+               - **Duration**: {time}
+               - **Verification**: {verification_step}
+
+        - name: "Database Rollback"
+          considerations:
+            - "Restore from backup vs. reverse migrations"
+            - "Data loss assessment"
+            - "Downtime requirements"
+            - "Verification queries"
+
+        - name: "Post-Rollback Verification"
+          checks:
+            - "Application running on previous version"
+            - "Database schema matches previous version"
+            - "Critical user flows working"
+            - "No data corruption"
+            - "Performance metrics normal"
+
+    monitoring_alerting_setup:
+      pattern: "monitoring-setup-{component}.md"
+      description: "Dashboard configurations, alert rules"
+
+      components:
+        - name: "application-monitoring"
+          tools: ["Prometheus", "Grafana"]
+          dashboards:
+            - name: "Application Health"
+              metrics:
+                - "Request rate"
+                - "Error rate"
+                - "Response time (p50, p95, p99)"
+                - "Active connections"
+
+            - name: "Order Execution"
+              metrics:
+                - "Orders per second"
+                - "Order execution latency"
+                - "Order success rate"
+                - "Exchange API latency"
+
+            - name: "Strategy Performance"
+              metrics:
+                - "Active strategies"
+                - "Signals generated"
+                - "Trades executed"
+                - "P&L by strategy"
+
+        - name: "infrastructure-monitoring"
+          tools: ["Prometheus", "Grafana", "CloudWatch"]
+          dashboards:
+            - name: "System Resources"
+              metrics:
+                - "CPU utilization"
+                - "Memory utilization"
+                - "Disk I/O"
+                - "Network throughput"
+
+            - name: "Database Performance"
+              metrics:
+                - "Query execution time"
+                - "Connection pool usage"
+                - "Slow queries"
+                - "Replication lag"
+
+        - name: "alert-rules"
+          alerts:
+            - name: "High Error Rate"
+              condition: "error_rate > 5%"
+              severity: "critical"
+              notification: ["email", "slack", "pagerduty"]
+
+            - name: "High Response Time"
+              condition: "p95_response_time > 500ms"
+              severity: "warning"
+              notification: ["email", "slack"]
+
+            - name: "Order Execution Failure"
+              condition: "order_failure_rate > 1%"
+              severity: "critical"
+              notification: ["email", "slack", "pagerduty"]
+
+            - name: "Database Connection Pool Exhausted"
+              condition: "db_connections > 90%"
+              severity: "warning"
+              notification: ["email", "slack"]
+
+            - name: "Circuit Breaker Activated"
+              condition: "circuit_breaker_state == 'open'"
+              severity: "critical"
+              notification: ["email", "slack", "sms"]
+
+# ============================================================================
+# SECTION 8: USER-FACING DOCUMENTATION
+# ============================================================================
+user_facing_documentation:
+  description: |
+    User guides, API documentation for external developers, training materials,
+    and change management communications.
+
+  output_files:
+    user_guides:
+      pattern: "user-guide-{feature}.md"
+      description: "How to use the features"
+
+      guides:
+        - name: "getting-started"
+          title: "Getting Started with Crypto Trading Bot Platform"
+          sections:
+            - "Account Setup"
+            - "Connecting Exchange Accounts"
+            - "Configuring API Keys"
+            - "Setting Up Your First Strategy"
+            - "Monitoring Your Bot"
+
+        - name: "strategy-configuration"
+          title: "Strategy Configuration Guide"
+          sections:
+            - "Understanding Trading Strategies"
+            - "Configuring Strategy Parameters"
+            - "Risk Management Settings"
+            - "Backtesting Your Strategy"
+            - "Enabling Live Trading"
+
+        - name: "risk-management"
+          title: "Risk Management Guide"
+          sections:
+            - "Setting Position Limits"
+            - "Configuring Stop Losses"
+            - "Understanding Circuit Breakers"
+            - "Portfolio Diversification"
+            - "Emergency Stop Procedures"
+
+        - name: "tax-reporting"
+          title: "Tax Reporting Guide"
+          sections:
+            - "Understanding Cost Basis Methods"
+            - "Generating Tax Reports"
+            - "Exporting to Tax Software"
+            - "Tax Loss Harvesting"
+            - "International Tax Considerations"
+
+    api_documentation:
+      pattern: "api-docs-{api_version}.md"
+      description: "For external developers (if applicable)"
+
+      format: "OpenAPI 3.0 / Swagger"
+      includes:
+        - "Authentication"
+        - "Rate Limits"
+        - "Endpoint Reference"
+        - "Request/Response Examples"
+        - "Error Codes"
+        - "Webhooks"
+        - "SDKs and Client Libraries"
+
+    training_materials:
+      pattern: "training-{topic}.md"
+      description: "Tutorials, videos, FAQs"
+
+      materials:
+        - name: "video-tutorials"
+          topics:
+            - "Platform Overview (5 min)"
+            - "Setting Up Your First Strategy (10 min)"
+            - "Understanding Risk Management (8 min)"
+            - "Backtesting Strategies (12 min)"
+            - "Tax Reporting Walkthrough (7 min)"
+
+        - name: "interactive-tutorials"
+          topics:
+            - "Guided Strategy Setup"
+            - "Risk Configuration Wizard"
+            - "Portfolio Analysis Tutorial"
+
+        - name: "faq"
+          categories:
+            - category: "Getting Started"
+              questions:
+                - "How do I connect my exchange account?"
+                - "Is my API key secure?"
+                - "What exchanges are supported?"
+
+            - category: "Trading Strategies"
+              questions:
+                - "Which strategy is best for beginners?"
+                - "Can I run multiple strategies simultaneously?"
+                - "How do I backtest a strategy?"
+
+            - category: "Risk Management"
+              questions:
+                - "What is a circuit breaker?"
+                - "How do I set stop losses?"
+                - "What happens if my bot loses connection?"
+
+            - category: "Tax Reporting"
+              questions:
+                - "Which cost basis method should I use?"
+                - "How do I export my tax report?"
+                - "Does the platform support international tax laws?"
+
+    change_management_communications:
+      pattern: "announcement-{date}-{topic}.md"
+      description: "Announcements to users"
+
+      template_sections:
+        - name: "Announcement Header"
+          fields:
+            - "Date"
+            - "Subject"
+            - "Audience (All Users/Beta Users/Enterprise)"
+            - "Priority (High/Medium/Low)"
+
+        - name: "Summary"
+          description: "Brief overview of the change"
+
+        - name: "Details"
+          description: "Comprehensive explanation"
+
+        - name: "Impact"
+          description: "How this affects users"
+
+        - name: "Action Required"
+          description: "What users need to do (if anything)"
+
+        - name: "Timeline"
+          description: "When changes take effect"
+
+        - name: "Support"
+          description: "How to get help"
+
+# ============================================================================
+# SECTION 9: PROJECT MANAGEMENT DOCUMENTS
+# ============================================================================
+project_management_documents:
+  description: |
+    Sprint retrospectives, burndown charts, velocity reports, risk registers,
+    and stakeholder status reports.
+
+  output_files:
+    sprint_retrospectives:
+      pattern: "retrospective-sprint-{sprint_number}.md"
+      description: "What went well, what to improve"
+
+      template_sections:
+        - name: "Retrospective Overview"
+          fields:
+            - "Sprint Number"
+            - "Sprint Dates"
+            - "Participants"
+            - "Facilitator"
+
+        - name: "Sprint Metrics"
+          metrics:
+            - "Planned Story Points"
+            - "Completed Story Points"
+            - "Velocity"
+            - "Bugs Found"
+            - "Bugs Fixed"
+
+        - name: "What Went Well"
+          format: "Bulleted list of positive outcomes"
+
+        - name: "What Didn't Go Well"
+          format: "Bulleted list of challenges and issues"
+
+        - name: "Action Items"
+          format: |
+            - **Action**: {Description}
+              - **Owner**: {Name}
+              - **Due Date**: {Date}
+              - **Status**: Open/In Progress/Done
+
+        - name: "Lessons Learned"
+          description: "Key takeaways for future sprints"
+
+    burndown_charts:
+      pattern: "burndown-sprint-{sprint_number}.md"
+      description: "Progress tracking within sprints"
+
+      data_points:
+        - "Daily remaining story points"
+        - "Ideal burndown line"
+        - "Actual burndown line"
+        - "Scope changes"
+
+      visualization: "Mermaid chart or embedded image"
+
+    velocity_reports:
+      pattern: "velocity-report-{quarter}.md"
+      description: "Team productivity metrics"
+
+      metrics:
+        - "Average velocity per sprint"
+        - "Velocity trend (increasing/decreasing/stable)"
+        - "Planned vs. actual velocity"
+        - "Velocity by team member"
+        - "Velocity by story type"
+
+    risk_registers:
+      pattern: "risk-register-{sprint_number}.md"
+      description: "Updated with new risks as they emerge"
+
+      template_structure:
+        - name: "Risk Entry"
+          fields:
+            - "Risk ID"
+            - "Risk Description"
+            - "Category (Technical/Resource/Schedule/External)"
+            - "Probability (High/Medium/Low)"
+            - "Impact (High/Medium/Low)"
+            - "Risk Score (Probability × Impact)"
+            - "Mitigation Strategy"
+            - "Contingency Plan"
+            - "Owner"
+            - "Status (Open/Mitigated/Closed)"
+
+      risk_categories:
+        - "Technical Risks"
+        - "Resource Risks"
+        - "Schedule Risks"
+        - "External Dependencies"
+        - "Security Risks"
+        - "Compliance Risks"
+
+    stakeholder_status_reports:
+      pattern: "status-report-{date}.md"
+      description: "Regular updates to leadership"
+
+      frequency: "Weekly"
+
+      template_sections:
+        - name: "Executive Summary"
+          description: "High-level overview (2-3 sentences)"
+
+        - name: "Progress This Week"
+          format: |
+            - **Completed**: {Stories completed}
+            - **In Progress**: {Stories in progress}
+            - **Blocked**: {Stories blocked}
+
+        - name: "Key Accomplishments"
+          format: "Bulleted list of major achievements"
+
+        - name: "Upcoming Milestones"
+          format: |
+            - **Milestone**: {Name}
+              - **Target Date**: {Date}
+              - **Status**: On Track/At Risk/Delayed
+
+        - name: "Risks and Issues"
+          format: |
+            - **Risk/Issue**: {Description}
+              - **Impact**: {Impact}
+              - **Mitigation**: {Mitigation plan}
+
+        - name: "Metrics"
+          metrics:
+            - "Sprint Velocity"
+            - "Story Points Completed"
+            - "Bugs Open/Closed"
+            - "Code Coverage"
+            - "Deployment Frequency"
+
+        - name: "Budget and Resources"
+          fields:
+            - "Budget Spent"
+            - "Budget Remaining"
+            - "Team Capacity"
+            - "Resource Needs"
+
+# ============================================================================
+# SECTION 10: COMPLIANCE & GOVERNANCE DOCUMENTS
+# ============================================================================
+compliance_governance_documents:
+  description: |
+    Security audit reports, compliance checklists, data privacy impact assessments,
+    and audit trails (if applicable).
+
+  output_files:
+    security_audit_reports:
+      pattern: "security-audit-{date}.md"
+      description: "Penetration test results, vulnerability scans"
+
+      template_sections:
+        - name: "Audit Overview"
+          fields:
+            - "Audit Date"
+            - "Audit Type (Penetration Test/Vulnerability Scan/Code Review)"
+            - "Auditor/Firm"
+            - "Scope"
+
+        - name: "Executive Summary"
+          description: "High-level findings and recommendations"
+
+        - name: "Vulnerabilities Found"
+          format: |
+            - **Vulnerability**: {Name}
+              - **Severity**: Critical/High/Medium/Low
+              - **CVSS Score**: {Score}
+              - **Description**: {Description}
+              - **Affected Components**: {Components}
+              - **Remediation**: {Fix description}
+              - **Status**: Open/In Progress/Fixed
+
+        - name: "Compliance Status"
+          standards:
+            - "OWASP Top 10"
+            - "CWE Top 25"
+            - "PCI DSS (if applicable)"
+            - "SOC 2 (if applicable)"
+
+        - name: "Recommendations"
+          description: "Security improvements and best practices"
+
+    compliance_checklists:
+      pattern: "compliance-checklist-{standard}.md"
+      description: "GDPR, SOC 2, HIPAA, etc."
+
+      standards:
+        - name: "GDPR"
+          title: "General Data Protection Regulation Compliance"
+          requirements:
+            - "Data processing lawful basis documented"
+            - "Privacy policy published and accessible"
+            - "User consent mechanisms implemented"
+            - "Right to access implemented"
+            - "Right to erasure (deletion) implemented"
+            - "Right to data portability implemented"
+            - "Data breach notification procedures"
+            - "Data protection impact assessment completed"
+            - "Data retention policies defined"
+            - "Third-party data processors vetted"
+
+        - name: "CCPA"
+          title: "California Consumer Privacy Act Compliance"
+          requirements:
+            - "Privacy notice at collection"
+            - "Right to know implemented"
+            - "Right to delete implemented"
+            - "Right to opt-out of sale"
+            - "Non-discrimination for exercising rights"
+
+        - name: "SOC2"
+          title: "SOC 2 Type II Compliance"
+          trust_service_criteria:
+            - "Security"
+            - "Availability"
+            - "Processing Integrity"
+            - "Confidentiality"
+            - "Privacy"
+
+    data_privacy_impact_assessments:
+      pattern: "dpia-{feature}.md"
+      description: "For handling sensitive data"
+
+      template_sections:
+        - name: "Assessment Overview"
+          fields:
+            - "Feature/System Name"
+            - "Assessment Date"
+            - "Assessor"
+            - "Data Protection Officer (if applicable)"
+
+        - name: "Data Processing Description"
+          fields:
+            - "What data is collected?"
+            - "Why is it collected?"
+            - "How is it collected?"
+            - "Where is it stored?"
+            - "Who has access?"
+            - "How long is it retained?"
+
+        - name: "Privacy Risks"
+          format: |
+            - **Risk**: {Description}
+              - **Likelihood**: High/Medium/Low
+              - **Impact**: High/Medium/Low
+              - **Mitigation**: {Mitigation measures}
+
+        - name: "Compliance Assessment"
+          regulations:
+            - "GDPR"
+            - "CCPA"
+            - "Local data protection laws"
+
+        - name: "Recommendations"
+          description: "Privacy enhancements and controls"
+
+    audit_trails:
+      pattern: "audit-trail-specification.md"
+      description: "Logs of who did what and when"
+
+      logged_events:
+        - "User authentication (login/logout)"
+        - "API key creation/rotation/deletion"
+        - "Order placement/cancellation"
+        - "Strategy enable/disable"
+        - "Risk limit changes"
+        - "Configuration changes"
+        - "Data access (sensitive data)"
+        - "Administrative actions"
+
+      log_fields:
+        - "Timestamp (ISO 8601)"
+        - "User ID"
+        - "Action Type"
+        - "Resource Affected"
+        - "Old Value (if applicable)"
+        - "New Value (if applicable)"
+        - "IP Address"
+        - "User Agent"
+        - "Result (Success/Failure)"
+        - "Error Message (if failed)"
+
+      retention_policy: "7 years for financial transactions, 1 year for general logs"
+
+      compliance_requirements:
+        - "Immutable logs (append-only)"
+        - "Tamper-evident (cryptographic hashing)"
+        - "Searchable and exportable"
+        - "Access controls (who can view logs)"
+
+# ============================================================================
+# SECTION 11: DOCUMENT GENERATION WORKFLOW
+# ============================================================================
+generation_workflow:
+  description: |
+    Defines the sequence and dependencies for generating documentation artifacts.
+
+  phases:
+    - phase: 1
+      name: "Epic and User Stories"
+      duration: "Week 0 (Pre-Sprint 1)"
+      outputs:
+        - "Epic specification (already exists)"
+        - "14 user story documents"
+        - "Story dependency matrix"
+
+    - phase: 2
+      name: "Technical Design Documents"
+      duration: "Week 0-1 (Before Implementation)"
+      outputs:
+        - "8 Architecture Decision Records"
+        - "5 API specifications (OpenAPI)"
+        - "4 Database schema documents"
+        - "3 System architecture diagrams"
+        - "6 Exchange integration specifications"
+
+    - phase: 3
+      name: "Sprint Planning Documents"
+      duration: "Start of each sprint"
+      outputs:
+        - "9 sprint backlog documents"
+        - "9 sprint goal documents"
+        - "Capacity planning spreadsheets"
+        - "Task breakdown for each story"
+
+    - phase: 4
+      name: "Development Artifacts"
+      duration: "During development (Sprints 1-9)"
+      outputs:
+        - "Code documentation (inline and API docs)"
+        - "README files (main, backend, frontend)"
+        - "Configuration documentation (dev, staging, prod)"
+        - "5 operational runbooks"
+
+    - phase: 5
+      name: "Testing Documentation"
+      duration: "During development and QA (Sprints 1-9)"
+      outputs:
+        - "14 test plans (one per story)"
+        - "100+ test cases"
+        - "Test data sets (JSON files)"
+        - "Bug report template"
+
+    - phase: 6
+      name: "Quality Assurance Documents"
+      duration: "During QA and code review (Sprints 1-9)"
+      outputs:
+        - "Definition of Done checklist"
+        - "14 acceptance test result documents"
+        - "Code review checklist"
+        - "14 performance test result documents"
+
+    - phase: 7
+      name: "Deployment & Operations Documents"
+      duration: "Before each deployment (Sprints 6-9)"
+      outputs:
+        - "3 deployment plans (staging, production, hotfix)"
+        - "9 release notes (one per sprint)"
+        - "3 rollback procedures"
+        - "Monitoring and alerting setup guides"
+
+    - phase: 8
+      name: "User-Facing Documentation"
+      duration: "Sprints 7-9 (UI development phase)"
+      outputs:
+        - "4 user guides"
+        - "API documentation (Swagger/OpenAPI)"
+        - "5 video tutorials"
+        - "FAQ document"
+        - "Change management announcements"
+
+    - phase: 9
+      name: "Project Management Documents"
+      duration: "Ongoing throughout project"
+      outputs:
+        - "9 sprint retrospectives"
+        - "9 burndown charts"
+        - "Quarterly velocity reports"
+        - "9 risk registers (updated each sprint)"
+        - "18 stakeholder status reports (weekly)"
+
+    - phase: 10
+      name: "Compliance & Governance Documents"
+      duration: "Sprints 6-9 (before production launch)"
+      outputs:
+        - "Security audit report"
+        - "3 compliance checklists (GDPR, CCPA, SOC2)"
+        - "Data privacy impact assessments"
+        - "Audit trail specification"
+
+# ============================================================================
+# SECTION 12: DOCUMENT TEMPLATES AND STANDARDS
+# ============================================================================
+document_standards:
+  description: |
+    Common standards, formatting rules, and reusable templates for all documents.
+
+  markdown_standards:
+    heading_levels:
+      - "# for document title (H1)"
+      - "## for major sections (H2)"
+      - "### for subsections (H3)"
+      - "#### for sub-subsections (H4)"
+
+    formatting:
+      - "Use **bold** for emphasis"
+      - "Use *italics* for technical terms on first use"
+      - "Use `code` for inline code, commands, file names"
+      - "Use ``` for code blocks with language specification"
+      - "Use > for blockquotes and important notes"
+      - "Use - for unordered lists"
+      - "Use 1. for ordered lists"
+      - "Use [ ] for task lists/checklists"
+
+    tables:
+      - "Use GitHub Flavored Markdown table syntax"
+      - "Include header row with alignment"
+      - "Keep tables readable in plain text"
+
+    links:
+      - "Use descriptive link text (not 'click here')"
+      - "Use relative links for internal documents"
+      - "Use absolute links for external resources"
+
+  metadata_header:
+    required_fields:
+      - "Document Title"
+      - "Document Type"
+      - "Document Version"
+      - "Last Updated"
+      - "Document Owner"
+      - "Related Stories/Epics"
+
+    optional_fields:
+      - "Review Cycle"
+      - "Confidentiality Level"
+      - "Approvers"
+      - "Distribution List"
+
+  version_control:
+    semantic_versioning:
+      - "Major version: Breaking changes or complete rewrites"
+      - "Minor version: New sections or significant additions"
+      - "Patch version: Corrections, clarifications, minor updates"
+
+    change_log:
+      format: |
+        ## Change Log
+
+        ### Version {version} - {date}
+        - {Change description}
+        - {Change description}
+
+  diagram_standards:
+    mermaid_diagrams:
+      supported_types:
+        - "flowchart"
+        - "sequenceDiagram"
+        - "classDiagram"
+        - "erDiagram"
+        - "gantt"
+        - "gitGraph"
+
+      style_guide:
+        - "Use consistent node shapes for similar concepts"
+        - "Use colors sparingly for emphasis"
+        - "Include legend for complex diagrams"
+        - "Keep diagrams focused (one concept per diagram)"
+
+  code_examples:
+    languages:
+      - "python"
+      - "javascript"
+      - "typescript"
+      - "sql"
+      - "yaml"
+      - "json"
+      - "bash"
+
+    standards:
+      - "Include comments explaining key steps"
+      - "Use realistic variable names"
+      - "Show error handling"
+      - "Include expected output"
+
+# ============================================================================
+# SECTION 13: AUTOMATION AND TOOLING
+# ============================================================================
+automation_tooling:
+  description: |
+    Tools and scripts for automating document generation and maintenance.
+
+  document_generators:
+    - name: "user-story-generator"
+      description: "Generate user story documents from epic specification"
+      input: "JIRA-epic-crypto-trading-bot-platform.md"
+      output: "user-story-{story_id}-{title_slug}.md"
+      technology: "Python script with Jinja2 templates"
+
+    - name: "api-spec-generator"
+      description: "Generate OpenAPI specs from code annotations"
+      input: "Backend code with docstrings"
+      output: "api-spec-{component}.yaml"
+      technology: "Swagger/OpenAPI tools"
+
+    - name: "test-case-generator"
+      description: "Generate test case templates from acceptance criteria"
+      input: "User story acceptance criteria"
+      output: "test-cases-{story_id}-{test_type}.md"
+      technology: "Python script"
+
+  documentation_tools:
+    - name: "MkDocs"
+      purpose: "Static site generator for documentation"
+      features:
+        - "Markdown support"
+        - "Search functionality"
+        - "Responsive theme"
+        - "Version switching"
+
+    - name: "Swagger UI"
+      purpose: "Interactive API documentation"
+      features:
+        - "Try-it-out functionality"
+        - "Request/response examples"
+        - "Authentication testing"
+
+    - name: "Mermaid"
+      purpose: "Diagram generation from text"
+      features:
+        - "Flowcharts"
+        - "Sequence diagrams"
+        - "ER diagrams"
+        - "Gantt charts"
+
+  validation_tools:
+    - name: "markdownlint"
+      purpose: "Markdown style and syntax checking"
+
+    - name: "vale"
+      purpose: "Prose linting and style guide enforcement"
+
+    - name: "openapi-validator"
+      purpose: "OpenAPI specification validation"
+
+  ci_cd_integration:
+    - "Automated documentation build on commit"
+    - "Link checking for broken references"
+    - "Spell checking"
+    - "Documentation versioning"
+    - "Automated deployment to documentation site"
+
+# ============================================================================
+# SECTION 14: MAINTENANCE AND REVIEW
+# ============================================================================
+maintenance_review:
+  description: |
+    Processes for keeping documentation up-to-date and relevant.
+
+  review_schedule:
+    - document_type: "User Stories"
+      frequency: "After each sprint"
+      reviewers: ["Product Owner", "Scrum Master"]
+
+    - document_type: "Technical Design Documents"
+      frequency: "Quarterly or when architecture changes"
+      reviewers: ["Tech Lead", "Senior Developers"]
+
+    - document_type: "API Documentation"
+      frequency: "With each API change"
+      reviewers: ["Backend Team", "API Consumers"]
+
+    - document_type: "User Guides"
+      frequency: "With each feature release"
+      reviewers: ["Product Manager", "UX Team", "Support Team"]
+
+    - document_type: "Runbooks"
+      frequency: "Quarterly or after incidents"
+      reviewers: ["DevOps Team", "On-Call Engineers"]
+
+  update_triggers:
+    - "Code changes affecting documented APIs"
+    - "New features or functionality"
+    - "Bug fixes that change behavior"
+    - "Security updates"
+    - "User feedback indicating confusion"
+    - "Compliance requirement changes"
+
+  deprecation_policy:
+    - "Mark deprecated features with warning"
+    - "Provide migration guide"
+    - "Set removal date (minimum 6 months notice)"
+    - "Update all affected documentation"
+    - "Notify users via multiple channels"
+
+  archival_policy:
+    - "Archive documentation for deprecated features"
+    - "Maintain historical versions for reference"
+    - "Keep audit trail of document changes"
+    - "Retain for compliance period (7 years for financial)"
+
+# ============================================================================
+# END OF OPENSPEC SPECIFICATION
+# ============================================================================
+

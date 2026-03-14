@@ -1,0 +1,295 @@
+{
+  "processingResults": {
+    "totalFilesUploaded": 25,
+    "uniqueDocuments": 18,
+    "duplicatesDetected": 7,
+    "processingTime": 45.3,
+    "errors": 0
+  },
+  "documents": [
+    {
+      "document": {
+        "id": "doc-001",
+        "type": "bank-statement",
+        "subtype": "checking",
+        "provider": "Chase",
+        "filename": "20250530-statements-7969-.pdf",
+        "uploadDate": "2025-01-15T10:30:00Z",
+        "processingDate": "2025-01-15T10:30:05Z",
+        "hash": "a1b2c3d4e5f6...",
+        "confidence": 0.95,
+        "detectionMethod": "hybrid-agreement"
+      },
+      "account": {
+        "number": "****7969",
+        "type": "checking",
+        "holder": null
+      },
+      "period": {
+        "start": "2025-05-01",
+        "end": "2025-05-30",
+        "dueDate": null
+      },
+      "financial": {
+        "currency": "USD",
+        "beginningBalance": 1234.56,
+        "endingBalance": 2345.67,
+        "totalDeposits": 5000.00,
+        "totalWithdrawals": 3888.89,
+        "fees": 12.00,
+        "interest": 1.23
+      },
+      "transactions": [
+        {
+          "date": "2025-05-15",
+          "description": "Purchase at Store",
+          "amount": -45.67,
+          "balance": 1500.00,
+          "category": "shopping"
+        },
+        {
+          "date": "2025-05-20",
+          "description": "Paycheck Deposit",
+          "amount": 2500.00,
+          "balance": 4000.00,
+          "category": "income"
+        }
+      ],
+      "metadata": {
+        "pageCount": 5,
+        "extractionMethod": "rule-based",
+        "extractionDuration": 234,
+        "warnings": []
+      }
+    },
+    {
+      "document": {
+        "id": "doc-002",
+        "type": "utility-bill",
+        "subtype": "cable-internet",
+        "provider": "Xfinity",
+        "filename": "0aa04849a3cedc68444011cc8652a96ebcc42dc1f5a2b8db3d43e9c89905c62d06e7e42a0a5d069999d9c8d3ae8177bc_8771101010267769_07-18-2025.pdf",
+        "uploadDate": "2025-01-15T10:31:00Z",
+        "processingDate": "2025-01-15T10:31:03Z",
+        "hash": "b2c3d4e5f6a7...",
+        "confidence": 0.92,
+        "detectionMethod": "hybrid-content"
+      },
+      "account": {
+        "number": "****7769",
+        "type": "residential",
+        "holder": null
+      },
+      "period": {
+        "start": "2025-06-18",
+        "end": "2025-07-17",
+        "dueDate": "2025-07-25"
+      },
+      "financial": {
+        "currency": "USD",
+        "amountDue": 189.99,
+        "previousBalance": 0.00,
+        "paymentsReceived": 0.00,
+        "newCharges": 189.99
+      },
+      "services": [
+        {
+          "name": "Internet",
+          "charge": 89.99,
+          "details": "Gigabit Internet"
+        },
+        {
+          "name": "TV",
+          "charge": 75.00,
+          "details": "Digital Preferred"
+        },
+        {
+          "name": "Equipment",
+          "charge": 25.00,
+          "details": "Gateway rental"
+        }
+      ],
+      "usage": {
+        "dataUsage": {
+          "amount": 850,
+          "unit": "GB",
+          "limit": 1200
+        }
+      },
+      "metadata": {
+        "pageCount": 8,
+        "extractionMethod": "rule-based",
+        "extractionDuration": 456,
+        "warnings": []
+      }
+    },
+    {
+      "document": {
+        "id": "doc-003",
+        "type": "utility-bill",
+        "subtype": "water-sewer-trash",
+        "provider": "Barrington Township",
+        "filename": "UB17133-0-20240131.pdf",
+        "uploadDate": "2025-01-15T10:32:00Z",
+        "processingDate": "2025-01-15T10:32:02Z",
+        "hash": "c3d4e5f6a7b8...",
+        "confidence": 0.98,
+        "detectionMethod": "hybrid-agreement"
+      },
+      "account": {
+        "number": "UB17133-0",
+        "type": "residential",
+        "holder": null
+      },
+      "period": {
+        "start": "2024-01-01",
+        "end": "2024-01-31",
+        "dueDate": "2024-02-15"
+      },
+      "financial": {
+        "currency": "USD",
+        "amountDue": 125.50,
+        "waterCharges": 45.00,
+        "sewerCharges": 55.50,
+        "trashFees": 25.00
+      },
+      "usage": {
+        "waterUsage": {
+          "amount": 4500,
+          "unit": "Gallons"
+        }
+      },
+      "metadata": {
+        "pageCount": 2,
+        "extractionMethod": "rule-based",
+        "extractionDuration": 123,
+        "warnings": []
+      }
+    },
+    {
+      "document": {
+        "id": "doc-004",
+        "type": "utility-bill",
+        "subtype": "electric",
+        "provider": "ComEd",
+        "filename": "64935768-6652-439f-8ede-a356e00e2315.pdf",
+        "uploadDate": "2025-01-15T10:33:00Z",
+        "processingDate": "2025-01-15T10:33:04Z",
+        "hash": "d4e5f6a7b8c9...",
+        "confidence": 0.90,
+        "detectionMethod": "hybrid-content"
+      },
+      "account": {
+        "number": "****2315",
+        "type": "residential",
+        "holder": null
+      },
+      "period": {
+        "start": "2024-12-01",
+        "end": "2024-12-31",
+        "dueDate": "2025-01-15"
+      },
+      "financial": {
+        "currency": "USD",
+        "amountDue": 145.67,
+        "deliveryCharges": 45.23,
+        "supplyCharges": 78.44,
+        "taxes": 22.00
+      },
+      "usage": {
+        "electricUsage": {
+          "amount": 850,
+          "unit": "kWh",
+          "ratePerKwh": 0.092
+        }
+      },
+      "metadata": {
+        "pageCount": 4,
+        "extractionMethod": "rule-based",
+        "extractionDuration": 345,
+        "warnings": []
+      }
+    },
+    {
+      "document": {
+        "id": "doc-005",
+        "type": "invoice",
+        "subtype": "retail",
+        "provider": "Amazon",
+        "filename": "amzn-01.pdf",
+        "uploadDate": "2025-01-15T10:34:00Z",
+        "processingDate": "2025-01-15T10:34:01Z",
+        "hash": "e5f6a7b8c9d0...",
+        "confidence": 0.88,
+        "detectionMethod": "hybrid-filename"
+      },
+      "order": {
+        "orderNumber": "123-4567890-1234567",
+        "orderDate": "2025-01-10"
+      },
+      "financial": {
+        "currency": "USD",
+        "subtotal": 45.99,
+        "tax": 3.68,
+        "shipping": 0.00,
+        "total": 49.67
+      },
+      "items": [
+        {
+          "name": "USB-C Cable 6ft",
+          "quantity": 2,
+          "price": 12.99,
+          "total": 25.98
+        },
+        {
+          "name": "Phone Case",
+          "quantity": 1,
+          "price": 20.01,
+          "total": 20.01
+        }
+      ],
+      "metadata": {
+        "pageCount": 1,
+        "extractionMethod": "rule-based",
+        "extractionDuration": 89,
+        "warnings": []
+      }
+    }
+  ],
+  "duplicates": [
+    {
+      "filename": "20250530-statements-7969- (1).pdf",
+      "reason": "account-period-match",
+      "confidence": 0.95,
+      "matchedDocument": "doc-001",
+      "uploadDate": "2025-01-15T10:35:00Z"
+    },
+    {
+      "filename": "statement-copy.pdf",
+      "reason": "exact-file-match",
+      "confidence": 1.0,
+      "matchedDocument": "doc-001",
+      "uploadDate": "2025-01-15T10:36:00Z"
+    }
+  ],
+  "insights": {
+    "documentTypeBreakdown": {
+      "bank-statement": 5,
+      "utility-bill": 10,
+      "invoice": 3
+    },
+    "providerBreakdown": {
+      "Chase": 5,
+      "Xfinity": 3,
+      "ComEd": 2,
+      "Barrington Township": 2,
+      "T-Mobile": 2,
+      "Amazon": 3,
+      "Other": 1
+    },
+    "totalExpenses": 1234.56,
+    "averageMonthlyUtilities": 450.00,
+    "duplicateRate": 0.28
+  }
+}
+
