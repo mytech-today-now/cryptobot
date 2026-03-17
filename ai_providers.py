@@ -902,13 +902,72 @@ def provider_delete_command(provider_id: str, profile_name: str) -> None:
 def provider_activate_command(provider_id: str, profile_name: str) -> None:
     """Write ``AI_ACTIVE_PROVIDER`` and ``AI_ACTIVE_PROFILE`` to ``.env``.
 
-    Validates that *provider_id* is registered before writing.
+    Validates that *provider_id* is registered before writing.  Updates
+    ``os.environ`` so the activation takes effect in the current process as
+    well as persisting to ``.env`` for subsequent runs.
 
     Args:
         provider_id:  The registered provider identifier to activate.
         profile_name: The profile name to activate.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> ensure_providers()
+        >>> import os; os.environ.pop("AI_ACTIVE_PROVIDER", None)
+        >>> provider_activate_command("anthropic", "personal")
+        >>> os.environ.get("AI_ACTIVE_PROVIDER")
+        'anthropic'
     """
-    ...  # TODO: Task 2.6
+    ensure_providers()
+
+    # Validate that the provider is registered
+    descriptor = _provider_registry.get(provider_id)
+    if descriptor is None:
+        registered = ", ".join(sorted(_provider_registry)) or "(none)"
+        print(
+            f"Error: Provider '{provider_id}' is not registered. "
+            f"Available providers: {registered}",
+            file=sys.stderr,
+        )
+        return
+
+    # Persist AI_ACTIVE_PROVIDER and AI_ACTIVE_PROFILE to .env
+    if HAS_DOTENV:
+        _DOTENV_PATH.touch(exist_ok=True)
+        dotenv_set_key(str(_DOTENV_PATH), "AI_ACTIVE_PROVIDER", provider_id)
+        dotenv_set_key(str(_DOTENV_PATH), "AI_ACTIVE_PROFILE", profile_name)
+    else:
+        print(
+            "Warning: python-dotenv is not installed — activation not persisted to .env.",
+            file=sys.stderr,
+        )
+
+    # Update os.environ so the current process reflects the activation immediately
+    os.environ["AI_ACTIVE_PROVIDER"] = provider_id
+    os.environ["AI_ACTIVE_PROFILE"] = profile_name
+
+    # Confirm success with a Rich panel
+    if HAS_RICH:
+        console = Console()
+        info_table = Table(show_header=False, box=None, padding=(0, 1))
+        info_table.add_column("Field", style="bold")
+        info_table.add_column("Value")
+        info_table.add_row("Provider:", descriptor.display_name)
+        info_table.add_row("Provider ID:", provider_id)
+        info_table.add_row("Profile:", profile_name)
+        console.print(
+            Panel(
+                info_table,
+                title="[bold green]✓ Provider Activated[/bold green]",
+                border_style="green",
+            )
+        )
+    else:
+        print(
+            f"Activated provider '{descriptor.display_name}' "
+            f"with profile '{profile_name}'."
+        )
 
 
 def provider_status_command() -> None:
