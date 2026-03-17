@@ -20,8 +20,8 @@ Key design rules:
 
 Change ID : AI-PROVIDER-001
 Phase     : 1 — Foundation
-Tasks     : 1.1 — Skeleton, 1.2 — Dataclasses
-Version   : 0.2.0
+Tasks     : 1.1 — Skeleton, 1.2 — Dataclasses, 1.3 — ensure_providers
+Version   : 0.3.0
 """
 
 from __future__ import annotations
@@ -69,6 +69,7 @@ __all__ = [
     "ProviderAlreadyRegisteredError",
     # Core functions
     "ensure_providers",
+    "_reset_for_tests",
     "resolve_active_provider",
     "get_active_profile",
     "mask_api_key",
@@ -88,8 +89,20 @@ __all__ = [
 # Internal state
 # ---------------------------------------------------------------------------
 _provider_registry: dict[str, "ProviderDescriptor"] = {}
+_api_key_store: dict[str, str] = {}   # maps env-var name → raw key value
 _initialized: bool = False
 _DOTENV_PATH: Path = Path(__file__).parent / ".env"
+
+
+def _reset_for_tests() -> None:
+    """Reset all module-level state to its initial values.
+
+    **For testing only** — never call this in production code.
+    """
+    global _provider_registry, _api_key_store, _initialized
+    _provider_registry = {}
+    _api_key_store = {}
+    _initialized = False
 
 
 # ---------------------------------------------------------------------------
@@ -199,8 +212,53 @@ def ensure_providers() -> None:
     Must be called before any registry or store access.  Safe to call
     multiple times (idempotent).  Logs a warning if ``.env`` is missing
     rather than raising.
+
+    Side-effects:
+        * Populates :data:`_api_key_store` with every ``*_API_KEY``
+          variable found in the environment after loading ``.env``.
+        * Sets :data:`_initialized` to ``True``.
+
+    Example::
+
+        >>> _reset_for_tests()          # clear state between test runs
+        >>> ensure_providers()          # first call loads state
+        >>> ensure_providers()          # second call is a no-op
     """
-    ...  # TODO: Task 1.3
+    import logging
+    global _initialized, _api_key_store
+
+    if _initialized:
+        return
+
+    # ------------------------------------------------------------------ #
+    # 1. Load .env (warn, never raise, when the file is missing)          #
+    # ------------------------------------------------------------------ #
+    if HAS_DOTENV:
+        if _DOTENV_PATH.exists():
+            load_dotenv(_DOTENV_PATH, override=True)
+        else:
+            logging.getLogger(__name__).warning(
+                "No .env file found at %s; provider credentials unavailable.",
+                _DOTENV_PATH,
+            )
+    else:
+        logging.getLogger(__name__).warning(
+            "python-dotenv is not installed; .env will not be loaded."
+        )
+
+    # ------------------------------------------------------------------ #
+    # 2. Snapshot all *_API_KEY variables into the internal store         #
+    # ------------------------------------------------------------------ #
+    _api_key_store = {
+        key: value
+        for key, value in os.environ.items()
+        if key.endswith("_API_KEY") and value
+    }
+
+    # ------------------------------------------------------------------ #
+    # 3. Mark as initialised so subsequent calls are no-ops               #
+    # ------------------------------------------------------------------ #
+    _initialized = True
 
 
 def resolve_active_provider() -> ProviderDescriptor:
@@ -212,8 +270,33 @@ def resolve_active_provider() -> ProviderDescriptor:
     Raises:
         ProviderNotConfiguredError: If ``AI_ACTIVE_PROVIDER`` is unset or the
             referenced provider is not in the registry.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> register_provider(ProviderDescriptor("anthropic", "Anthropic (Claude)", "ANTHROPIC", "claude-3-5-sonnet-20241022"))
+        >>> import os; os.environ["AI_ACTIVE_PROVIDER"] = "anthropic"
+        >>> resolve_active_provider().provider_id
+        'anthropic'
     """
-    ...  # TODO: Task 1.4
+    ensure_providers()
+
+    provider_id = os.environ.get("AI_ACTIVE_PROVIDER", "").strip()
+    if not provider_id:
+        raise ProviderNotConfiguredError(
+            "AI_ACTIVE_PROVIDER is not set. "
+            "Run: python generate_documentation.py configure --activate-profile <provider>/<profile>"
+        )
+
+    descriptor = _provider_registry.get(provider_id)
+    if descriptor is None:
+        registered = ", ".join(sorted(_provider_registry)) or "(none)"
+        raise ProviderNotConfiguredError(
+            f"Provider '{provider_id}' is not registered. "
+            f"Registered providers: {registered}"
+        )
+
+    return descriptor
 
 
 def get_active_profile() -> ProviderProfile:
@@ -226,8 +309,57 @@ def get_active_profile() -> ProviderProfile:
     Raises:
         ProfileNotFoundError: If the profile key is absent from ``.env``
             or ``AI_ACTIVE_PROFILE`` is unset.
+        ProviderNotConfiguredError: If ``AI_ACTIVE_PROVIDER`` is unset or
+            unregistered (delegated to :func:`resolve_active_provider`).
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> register_provider(ProviderDescriptor("anthropic", "Anthropic (Claude)", "ANTHROPIC", "claude-3-5-sonnet-20241022"))
+        >>> import os; os.environ["AI_ACTIVE_PROVIDER"] = "anthropic"
+        >>> os.environ["AI_ACTIVE_PROFILE"] = "personal"
+        >>> os.environ["ANTHROPIC_API_KEY"] = "sk-ant-test"
+        >>> p = get_active_profile()
+        >>> p.profile_name
+        'personal'
+        >>> p.api_key
+        'sk-ant-test'
     """
-    ...  # TODO: Task 1.4
+    ensure_providers()
+
+    descriptor = resolve_active_provider()  # raises ProviderNotConfiguredError if needed
+
+    profile_name = os.environ.get("AI_ACTIVE_PROFILE", "").strip()
+    if not profile_name:
+        raise ProfileNotFoundError(
+            "AI_ACTIVE_PROFILE is not set. "
+            "Run: python generate_documentation.py configure --activate-profile <provider>/<profile>"
+        )
+
+    # Resolve the API key from the provider's env-var prefix: <PREFIX>_API_KEY
+    api_key_env_var = f"{descriptor.env_key_prefix}_API_KEY"
+    api_key = os.environ.get(api_key_env_var, "").strip()
+
+    if descriptor.requires_api_key and not api_key:
+        raise ProfileNotFoundError(
+            f"API key for provider '{descriptor.provider_id}' profile '{profile_name}' "
+            f"is not set. Expected environment variable: {api_key_env_var}"
+        )
+
+    # Resolve optional model and base_url overrides from the env
+    model_env_var = f"{descriptor.env_key_prefix}_MODEL"
+    model = os.environ.get(model_env_var, "").strip() or descriptor.default_model or None
+
+    base_url_env_var = f"{descriptor.env_key_prefix}_BASE_URL"
+    base_url = os.environ.get(base_url_env_var, "").strip() or descriptor.base_url or None
+
+    return ProviderProfile(
+        provider_id=descriptor.provider_id,
+        profile_name=profile_name,
+        api_key=api_key,
+        model=model,
+        base_url=base_url,
+    )
 
 
 def mask_api_key(key: str) -> str:
@@ -261,8 +393,27 @@ def register_provider(descriptor: ProviderDescriptor, force: bool = False) -> No
     Raises:
         ProviderAlreadyRegisteredError: If *descriptor.provider_id* is
             already registered and *force* is ``False``.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> d = ProviderDescriptor("myprov", "My Provider", "MYPROV", "gpt-x")
+        >>> register_provider(d)
+        >>> "myprov" in _provider_registry
+        True
+        >>> register_provider(d, force=True)  # no error
+        >>> register_provider(d)              # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+            ...
+        ai_providers.ProviderAlreadyRegisteredError: ...
     """
-    ...  # TODO: Task 3.1
+    provider_id = descriptor.provider_id
+    if provider_id in _provider_registry and not force:
+        raise ProviderAlreadyRegisteredError(
+            f"Provider '{provider_id}' is already registered. "
+            "Use force=True to overwrite."
+        )
+    _provider_registry[provider_id] = descriptor
 
 
 def parse_provider_profile_arg(value: str) -> tuple[str, str]:
