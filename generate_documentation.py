@@ -35,6 +35,22 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import re
 
+# AI provider abstraction — imported lazily in functions to keep the module
+# importable even before ai_providers.py is available.
+try:
+    from ai_providers import (
+        resolve_active_provider,
+        get_active_profile,
+        mask_api_key,
+        ProviderNotConfiguredError,
+        ProfileNotFoundError,
+        ProviderDescriptor,
+        ProviderProfile,
+    )
+    HAS_AI_PROVIDERS = True
+except ImportError:  # pragma: no cover
+    HAS_AI_PROVIDERS = False
+
 # Jinja2 is optional for now (not used in current implementation)
 try:
     from jinja2 import Environment, FileSystemLoader, Template
@@ -49,7 +65,15 @@ logger = logging.getLogger(__name__)
 class DocumentGenerator:
     """Main document generator class"""
     
-    def __init__(self, openspec_path: str, epic_path: str, output_dir: str, dry_run: bool = False):
+    def __init__(
+        self,
+        openspec_path: str,
+        epic_path: str,
+        output_dir: str,
+        dry_run: bool = False,
+        provider: "Optional[Any]" = None,
+        profile: "Optional[Any]" = None,
+    ):
         """
         Initialize the document generator.
 
@@ -58,6 +82,8 @@ class DocumentGenerator:
             epic_path: Path to the epic markdown file
             output_dir: Directory where generated documents will be saved
             dry_run: If True, only preview what would be generated without creating files
+            provider: Optional ProviderDescriptor for AI-powered generation
+            profile: Optional ProviderProfile (resolved credentials) for AI calls
         """
         # Resolve paths relative to script directory if not absolute
         script_dir = Path(__file__).parent.resolve()
@@ -66,7 +92,11 @@ class DocumentGenerator:
         self.epic_path = Path(epic_path) if Path(epic_path).is_absolute() else script_dir / epic_path
         self.output_dir = Path(output_dir) if Path(output_dir).is_absolute() else script_dir / output_dir
         self.dry_run = dry_run
-        
+
+        # AI provider routing — set when --generate uses the provider abstraction
+        self.provider = provider   # ProviderDescriptor or None
+        self.profile = profile     # ProviderProfile  or None
+
         self.spec: Dict[str, Any] = {}
         self.epic_data: Dict[str, Any] = {}
         self.stats = {
@@ -75,16 +105,21 @@ class DocumentGenerator:
             'skipped': 0,
             'errors': 0
         }
-        
+
         # Create output directory if it doesn't exist
         if not dry_run:
             self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         logger.info(f"Initialized DocumentGenerator")
         logger.info(f"  OpenSpec: {self.openspec_path}")
         logger.info(f"  Epic: {self.epic_path}")
         logger.info(f"  Output: {self.output_dir}")
         logger.info(f"  Dry Run: {self.dry_run}")
+        if self.provider:
+            logger.info(f"  AI Provider: {self.provider.provider_id} ({self.provider.display_name})")
+        if self.profile:
+            _key_display = mask_api_key(self.profile.api_key) if HAS_AI_PROVIDERS else "(hidden)"
+            logger.info(f"  AI Profile:  {self.profile.profile_name} — key {_key_display}")
     
     def load_openspec(self) -> None:
         """Load and parse the OpenSpec YAML file"""
@@ -566,6 +601,53 @@ class DocumentGenerator:
         logger.info(f"Success rate: {success_rate:.1f}%")
 
 
+def _resolve_ai_context(required: bool = False):
+    """Resolve the active AI provider and profile through the abstraction layer.
+
+    Args:
+        required: When ``True``, a missing/unconfigured provider is a fatal
+                  error (exits with a user-readable message).  When ``False``
+                  the function returns ``(None, None)`` and logs a warning so
+                  that template-based generation can still proceed.
+
+    Returns:
+        A ``(ProviderDescriptor, ProviderProfile)`` tuple, or ``(None, None)``
+        when the provider is unconfigured and *required* is ``False``.
+    """
+    if not HAS_AI_PROVIDERS:
+        logger.warning(
+            "ai_providers module is not available — skipping provider resolution. "
+            "Install dependencies and ensure ai_providers.py is on the Python path."
+        )
+        return None, None
+
+    try:
+        provider = resolve_active_provider()
+        profile = get_active_profile()
+        return provider, profile
+    except ProviderNotConfiguredError as exc:
+        msg = (
+            f"No AI provider configured: {exc}\n"
+            "Run:  python generate_documentation.py configure --activate-profile <provider>/<profile>\n"
+            "Use:  python generate_documentation.py configure --list-providers  (to see available providers)"
+        )
+        if required:
+            print(f"Error: {msg}", file=sys.stderr)
+            sys.exit(1)
+        logger.warning("AI provider not configured — proceeding with template-based generation. (%s)", exc)
+        return None, None
+    except ProfileNotFoundError as exc:
+        msg = (
+            f"AI profile not found or API key missing: {exc}\n"
+            "Run:  python generate_documentation.py configure --create-profile <provider>/<profile>"
+        )
+        if required:
+            print(f"Error: {msg}", file=sys.stderr)
+            sys.exit(1)
+        logger.warning("AI profile unavailable — proceeding with template-based generation. (%s)", exc)
+        return None, None
+
+
 def main():
     """Main entry point"""
     # Get script directory for default paths
@@ -608,6 +690,16 @@ Examples:
             'compliance_governance_documents'
         ],
         help='Generate documents for a specific category'
+    )
+
+    parser.add_argument(
+        '--generate',
+        action='store_true',
+        help=(
+            'AI-powered generation: resolves the active AI provider/profile '
+            'via the provider abstraction layer before running. '
+            'Exits with a clear error when no provider is configured.'
+        ),
     )
 
     parser.add_argument(
@@ -819,6 +911,14 @@ Examples:
         print("=" * 80 + "\n")
         return 0
 
+    # ------------------------------------------------------------------
+    # AI provider resolution
+    # --generate requires a configured provider (hard failure on missing).
+    # Without --generate, resolution is attempted but missing provider only
+    # produces a warning so template-based generation can still proceed.
+    # ------------------------------------------------------------------
+    ai_provider, ai_profile = _resolve_ai_context(required=getattr(args, 'generate', False))
+
     # Show configuration
     logger.info("=" * 80)
     logger.info("CONFIGURATION")
@@ -831,6 +931,11 @@ Examples:
         logger.info(f"Phase:        {args.phase}")
     if args.category:
         logger.info(f"Category:     {args.category}")
+    if ai_provider:
+        logger.info(f"AI Provider:  {ai_provider.provider_id} ({ai_provider.display_name})")
+    if ai_profile:
+        _key_display = mask_api_key(ai_profile.api_key) if HAS_AI_PROVIDERS else "(hidden)"
+        logger.info(f"AI Profile:   {ai_profile.profile_name} — key {_key_display}")
     logger.info("=" * 80)
     logger.info("")
 
@@ -840,7 +945,9 @@ Examples:
             openspec_path=args.openspec,
             epic_path=args.epic,
             output_dir=args.output,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
+            provider=ai_provider,
+            profile=ai_profile,
         )
     except Exception as e:
         logger.error(f"Failed to initialize generator: {e}")

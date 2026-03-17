@@ -395,14 +395,21 @@ def get_active_profile() -> ProviderProfile:
             "Run: python generate_documentation.py configure --activate-profile <provider>/<profile>"
         )
 
-    # Resolve the API key from the provider's env-var prefix: <PREFIX>_API_KEY
-    api_key_env_var = f"{descriptor.env_key_prefix}_API_KEY"
-    api_key = os.environ.get(api_key_env_var, "").strip()
+    # Resolve the API key.  Look for the named-profile key first
+    # (<PREFIX>_<PROFILE_NAME_UPPER>_API_KEY), then fall back to the generic
+    # default (<PREFIX>_API_KEY).
+    profile_key_env_var = f"{descriptor.env_key_prefix}_{profile_name.upper()}_API_KEY"
+    default_key_env_var = f"{descriptor.env_key_prefix}_API_KEY"
+
+    api_key = os.environ.get(profile_key_env_var, "").strip()
+    if not api_key:
+        api_key = os.environ.get(default_key_env_var, "").strip()
 
     if descriptor.requires_api_key and not api_key:
         raise ProfileNotFoundError(
             f"API key for provider '{descriptor.provider_id}' profile '{profile_name}' "
-            f"is not set. Expected environment variable: {api_key_env_var}"
+            f"is not set. Expected environment variable: {profile_key_env_var} "
+            f"(or fallback: {default_key_env_var})"
         )
 
     # Resolve optional model and base_url overrides from the env
@@ -424,6 +431,9 @@ def get_active_profile() -> ProviderProfile:
 def mask_api_key(key: str) -> str:
     """Return a masked representation of *key* safe for terminal output.
 
+    The visible prefix is everything before the first ``"-"`` separator (or
+    the first three characters when no separator is present).
+
     Examples::
 
         >>> mask_api_key("sk-ant-abc123")
@@ -435,10 +445,13 @@ def mask_api_key(key: str) -> str:
         key: The raw API key string.
 
     Returns:
-        A masked string of the form ``"sk-***...***"`` or ``"(not set)"``
+        A masked string of the form ``"<prefix>-***...***"`` or ``"(not set)"``
         when *key* is empty.
     """
-    ...  # TODO: Task 3.3
+    if not key:
+        return "(not set)"
+    prefix = key.split("-", 1)[0] if "-" in key else key[:3]
+    return f"{prefix}-***...***"
 
 
 def register_provider(descriptor: ProviderDescriptor, force: bool = False) -> None:
