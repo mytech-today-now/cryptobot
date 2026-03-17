@@ -8,16 +8,21 @@ This script generates all documentation artifacts based on the OpenSpec specific
 
 Usage:
     python generate_documentation.py [--phase PHASE_NUMBER] [--category CATEGORY_NAME] [--dry-run]
+    python generate_documentation.py configure [FLAGS]
+    python generate_documentation.py configure          # interactive wizard (no flags)
 
 Examples:
     python generate_documentation.py --phase 1                    # Generate Phase 1 documents only
     python generate_documentation.py --category user_stories      # Generate user stories only
     python generate_documentation.py --dry-run                    # Preview what would be generated
     python generate_documentation.py                              # Generate all documents
+    python generate_documentation.py configure -h                 # Show configure help
+    python generate_documentation.py configure --list-providers   # List AI providers
+    python generate_documentation.py configure --activate-profile anthropic/personal
 
 Author: Development Team
-Version: 1.0.0
-Date: 2026-03-12
+Version: 1.1.0
+Date: 2026-03-17
 """
 
 import os
@@ -650,7 +655,98 @@ Examples:
         help=f'Output directory for generated documents (default: script directory - {script_dir})'
     )
 
+    # ------------------------------------------------------------------
+    # Subcommands
+    # ------------------------------------------------------------------
+    subparsers = parser.add_subparsers(
+        dest='subcommand',
+        metavar='SUBCOMMAND',
+        help='Available subcommands (use SUBCOMMAND -h for details)',
+    )
+
+    # configure subcommand — AI provider management
+    configure_parser = subparsers.add_parser(
+        'configure',
+        help='Manage AI provider profiles',
+        description=(
+            'Configure AI provider profiles for use with AI-powered commands.\n'
+            'Run without flags to launch the interactive guided setup wizard.'
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                                         # interactive wizard
+  %(prog)s --list-providers                        # list all providers
+  %(prog)s --list-profiles                         # list all profiles
+  %(prog)s --list-profiles-for-provider anthropic  # list profiles for one provider
+  %(prog)s --create-profile anthropic/personal     # create a new profile
+  %(prog)s --edit-profile   anthropic/personal     # edit an existing profile
+  %(prog)s --delete-profile anthropic/personal     # delete a profile
+  %(prog)s --activate-profile anthropic/personal   # set the active profile
+        """,
+    )
+
+    configure_parser.add_argument(
+        '--list-providers',
+        action='store_true',
+        default=False,
+        help='List all registered AI providers',
+    )
+    configure_parser.add_argument(
+        '--list-profiles',
+        action='store_true',
+        default=False,
+        help='List all saved provider profiles',
+    )
+    configure_parser.add_argument(
+        '--list-profiles-for-provider',
+        metavar='PROVIDER_ID',
+        default=None,
+        help='List profiles for a specific provider (e.g. anthropic)',
+    )
+    configure_parser.add_argument(
+        '--create-profile',
+        metavar='PROVIDER_ID/PROFILE_NAME',
+        default=None,
+        help='Create a new profile (e.g. anthropic/personal)',
+    )
+    configure_parser.add_argument(
+        '--edit-profile',
+        metavar='PROVIDER_ID/PROFILE_NAME',
+        default=None,
+        help='Edit an existing profile (e.g. anthropic/personal)',
+    )
+    configure_parser.add_argument(
+        '--delete-profile',
+        metavar='PROVIDER_ID/PROFILE_NAME',
+        default=None,
+        help='Delete a profile (e.g. anthropic/personal)',
+    )
+    configure_parser.add_argument(
+        '--activate-profile',
+        metavar='PROVIDER_ID/PROFILE_NAME',
+        default=None,
+        help='Set the active AI provider/profile (e.g. anthropic/personal)',
+    )
+
     args = parser.parse_args()
+
+    # ------------------------------------------------------------------
+    # Dispatch: configure subcommand (early return — bypasses doc gen)
+    # ------------------------------------------------------------------
+    if args.subcommand == 'configure':
+        from ai_providers import ConfigureOptions, configure_command
+        options = ConfigureOptions(
+            list_providers=args.list_providers,
+            list_profiles=args.list_profiles,
+            list_profiles_for_provider=args.list_profiles_for_provider,
+            create_profile=args.create_profile,
+            edit_profile=args.edit_profile,
+            delete_profile=args.delete_profile,
+            activate_profile=args.activate_profile,
+        )
+        result = configure_command(options)
+        return result if isinstance(result, int) else 0
 
     # Configure logging based on verbosity
     log_level = logging.INFO

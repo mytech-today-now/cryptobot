@@ -20,8 +20,8 @@ Key design rules:
 
 Change ID : AI-PROVIDER-001
 Phase     : 1 — Foundation
-Task      : 1.1 — Skeleton
-Version   : 0.1.0 (skeleton)
+Tasks     : 1.1 — Skeleton, 1.2 — Dataclasses
+Version   : 0.2.0
 """
 
 from __future__ import annotations
@@ -56,6 +56,35 @@ except ImportError:  # pragma: no cover
     HAS_QUESTIONARY = False
 
 # ---------------------------------------------------------------------------
+# Public API surface
+# ---------------------------------------------------------------------------
+__all__ = [
+    # Dataclasses
+    "ProviderDescriptor",
+    "ProviderProfile",
+    "ConfigureOptions",
+    # Exceptions
+    "ProviderNotConfiguredError",
+    "ProfileNotFoundError",
+    "ProviderAlreadyRegisteredError",
+    # Core functions
+    "ensure_providers",
+    "resolve_active_provider",
+    "get_active_profile",
+    "mask_api_key",
+    "register_provider",
+    "parse_provider_profile_arg",
+    # Command functions
+    "provider_list_command",
+    "provider_create_command",
+    "provider_edit_command",
+    "provider_delete_command",
+    "provider_activate_command",
+    "provider_status_command",
+    "configure_command",
+]
+
+# ---------------------------------------------------------------------------
 # Internal state
 # ---------------------------------------------------------------------------
 _provider_registry: dict[str, "ProviderDescriptor"] = {}
@@ -85,31 +114,71 @@ class ProviderAlreadyRegisteredError(ValueError):
 
 @dataclass
 class ProviderDescriptor:
-    """Static metadata describing a single AI provider."""
+    """Static metadata describing a single AI provider.
 
-    provider_id: str         # e.g. ``"anthropic"``
-    display_name: str        # e.g. ``"Anthropic (Claude)"``
-    env_key_prefix: str      # e.g. ``"ANTHROPIC"``
-    default_model: str       # e.g. ``"claude-3-5-sonnet-20241022"``
-    base_url: Optional[str]  # ``None`` for cloud providers
-    requires_api_key: bool   # ``False`` for some self-hosted providers
+    Example::
+
+        >>> d = ProviderDescriptor("anthropic", "Anthropic (Claude)", "ANTHROPIC",
+        ...                        "claude-3-5-sonnet-20241022", None, True)
+        >>> d.provider_id
+        'anthropic'
+        >>> d.requires_api_key
+        True
+        >>> d.base_url is None
+        True
+    """
+
+    provider_id: str                  # e.g. ``"anthropic"``
+    display_name: str                 # e.g. ``"Anthropic (Claude)"``
+    env_key_prefix: str               # e.g. ``"ANTHROPIC"``
+    default_model: str                # e.g. ``"claude-3-5-sonnet-20241022"``
+    base_url: Optional[str] = None    # ``None`` for cloud providers
+    requires_api_key: bool = True     # ``False`` for some self-hosted providers
 
 
 @dataclass
 class ProviderProfile:
-    """Runtime profile containing resolved credentials for a provider."""
+    """Runtime profile containing resolved credentials for a provider.
 
-    provider_id: str          # e.g. ``"anthropic"``
-    profile_name: str         # e.g. ``"personal"``
-    api_key: str              # raw key — never logged or displayed
-    model: Optional[str]      # e.g. ``"claude-3-5-sonnet-20241022"``
-    base_url: Optional[str]   # for custom / self-hosted providers
-    extra: dict = field(default_factory=dict)  # provider-specific settings
+    The ``api_key`` field stores the raw secret — never pass it to log
+    statements or display output; always use :func:`mask_api_key` first.
+
+    Example::
+
+        >>> p = ProviderProfile("anthropic", "personal", "sk-ant-abc123")
+        >>> p.provider_id
+        'anthropic'
+        >>> p.model is None
+        True
+        >>> p.extra
+        {}
+    """
+
+    provider_id: str                   # e.g. ``"anthropic"``
+    profile_name: str                  # e.g. ``"personal"``
+    api_key: str                       # raw key — never logged or displayed
+    model: Optional[str] = None        # e.g. ``"claude-3-5-sonnet-20241022"``
+    base_url: Optional[str] = None     # for custom / self-hosted providers
+    extra: dict = field(default_factory=dict)   # provider-specific settings
 
 
 @dataclass
 class ConfigureOptions:
-    """Parsed flags for the ``configure`` subcommand."""
+    """Parsed flags for the ``configure`` subcommand.
+
+    All fields default to ``False`` or ``None`` so that the wizard is
+    launched when no flags are present.
+
+    Example::
+
+        >>> o = ConfigureOptions()
+        >>> o.list_providers
+        False
+        >>> o.activate_profile is None
+        True
+        >>> ConfigureOptions(list_providers=True).list_providers
+        True
+    """
 
     list_providers: bool = False
     list_profiles: bool = False
