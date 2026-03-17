@@ -19,9 +19,9 @@ Key design rules:
   registry or store access.
 
 Change ID : AI-PROVIDER-001
-Phase     : 1 — Foundation
-Tasks     : 1.1 — Skeleton, 1.2 — Dataclasses, 1.3 — ensure_providers
-Version   : 0.3.0
+Phase     : 1–3 — Foundation, CLI Dispatch, Built-in Providers
+Tasks     : 1.1–1.4, 2.1–2.2, 3.1–3.2
+Version   : 0.5.0
 """
 
 from __future__ import annotations
@@ -206,6 +206,59 @@ class ConfigureOptions:
 # Public API — stubs (implemented in subsequent tasks)
 # ---------------------------------------------------------------------------
 
+def _register_builtin_providers() -> None:
+    """Register the five built-in AI provider descriptors.
+
+    Called from :func:`ensure_providers`.  Uses ``force=True`` so that
+    re-initialisation after :func:`_reset_for_tests` always restores the
+    built-ins without raising :class:`ProviderAlreadyRegisteredError`.
+    """
+    _BUILTIN_PROVIDERS = [
+        ProviderDescriptor(
+            provider_id="anthropic",
+            display_name="Anthropic (Claude)",
+            env_key_prefix="ANTHROPIC",
+            default_model="claude-3-5-sonnet-20241022",
+            base_url=None,
+            requires_api_key=True,
+        ),
+        ProviderDescriptor(
+            provider_id="openai",
+            display_name="OpenAI",
+            env_key_prefix="OPENAI",
+            default_model="gpt-4o",
+            base_url=None,
+            requires_api_key=True,
+        ),
+        ProviderDescriptor(
+            provider_id="google_ai",
+            display_name="Google AI (Gemini)",
+            env_key_prefix="GOOGLE_AI",
+            default_model="gemini-1.5-pro",
+            base_url=None,
+            requires_api_key=True,
+        ),
+        ProviderDescriptor(
+            provider_id="ollama",
+            display_name="Ollama (local)",
+            env_key_prefix="OLLAMA",
+            default_model="llama3",
+            base_url="http://localhost:11434",
+            requires_api_key=False,
+        ),
+        ProviderDescriptor(
+            provider_id="localai",
+            display_name="LocalAI (local)",
+            env_key_prefix="LOCALAI",
+            default_model="gpt-4",
+            base_url="http://localhost:8080",
+            requires_api_key=False,
+        ),
+    ]
+    for descriptor in _BUILTIN_PROVIDERS:
+        register_provider(descriptor, force=True)
+
+
 def ensure_providers() -> None:
     """Load the provider registry and active state from ``.env``.
 
@@ -214,6 +267,7 @@ def ensure_providers() -> None:
     rather than raising.
 
     Side-effects:
+        * Registers all five built-in providers via :func:`_register_builtin_providers`.
         * Populates :data:`_api_key_store` with every ``*_API_KEY``
           variable found in the environment after loading ``.env``.
         * Sets :data:`_initialized` to ``True``.
@@ -247,7 +301,12 @@ def ensure_providers() -> None:
         )
 
     # ------------------------------------------------------------------ #
-    # 2. Snapshot all *_API_KEY variables into the internal store         #
+    # 2. Register all five built-in providers (force=True for idempotency) #
+    # ------------------------------------------------------------------ #
+    _register_builtin_providers()
+
+    # ------------------------------------------------------------------ #
+    # 3. Snapshot all *_API_KEY variables into the internal store         #
     # ------------------------------------------------------------------ #
     _api_key_store = {
         key: value
@@ -256,7 +315,7 @@ def ensure_providers() -> None:
     }
 
     # ------------------------------------------------------------------ #
-    # 3. Mark as initialised so subsequent calls are no-ops               #
+    # 4. Mark as initialised so subsequent calls are no-ops               #
     # ------------------------------------------------------------------ #
     _initialized = True
 
@@ -428,8 +487,20 @@ def parse_provider_profile_arg(value: str) -> tuple[str, str]:
     Raises:
         SystemExit: With a human-readable error message when the ``/``
             separator is absent.
+
+    Example::
+
+        >>> parse_provider_profile_arg("anthropic/personal")
+        ('anthropic', 'personal')
     """
-    ...  # TODO: Task 2.6
+    parts = value.split("/", maxsplit=1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        print(
+            f"Error: expected 'provider_id/profile_name', got '{value}'.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return parts[0], parts[1]
 
 
 def provider_list_command() -> None:
@@ -524,6 +595,97 @@ def configure_command(options: ConfigureOptions) -> int:
 
     Returns:
         Exit code — ``0`` on success, ``1`` on error.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> configure_command(ConfigureOptions(list_providers=True))
+        0
     """
-    ...  # TODO: Task 2.2
+    ensure_providers()
+
+    try:
+        # --list-providers
+        if options.list_providers:
+            provider_list_command()
+            return 0
+
+        # --list-profiles
+        if options.list_profiles:
+            _list_all_profiles_command()
+            return 0
+
+        # --list-profiles-for-provider <provider_id>
+        if options.list_profiles_for_provider is not None:
+            _list_profiles_for_provider_command(options.list_profiles_for_provider)
+            return 0
+
+        # --create-profile <provider_id/profile_name>
+        if options.create_profile is not None:
+            provider_id, profile_name = parse_provider_profile_arg(options.create_profile)
+            provider_create_command(provider_id, profile_name)
+            return 0
+
+        # --edit-profile <provider_id/profile_name>
+        if options.edit_profile is not None:
+            provider_id, profile_name = parse_provider_profile_arg(options.edit_profile)
+            provider_edit_command(provider_id, profile_name)
+            return 0
+
+        # --delete-profile <provider_id/profile_name>
+        if options.delete_profile is not None:
+            provider_id, profile_name = parse_provider_profile_arg(options.delete_profile)
+            provider_delete_command(provider_id, profile_name)
+            return 0
+
+        # --activate-profile <provider_id/profile_name>
+        if options.activate_profile is not None:
+            provider_id, profile_name = parse_provider_profile_arg(options.activate_profile)
+            provider_activate_command(provider_id, profile_name)
+            return 0
+
+        # No flags — launch interactive wizard
+        _launch_configure_wizard()
+        return 0
+
+    except (ProviderNotConfiguredError, ProfileNotFoundError, ProviderAlreadyRegisteredError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:  # noqa: BLE001
+        print(f"Unexpected error: {exc}", file=sys.stderr)
+        return 1
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers for configure_command dispatch (implemented in later tasks)
+# ---------------------------------------------------------------------------
+
+def _list_all_profiles_command() -> None:
+    """List all profiles across all registered providers.
+
+    Stub — full implementation in Task 2.x.
+    """
+    print("(--list-profiles: not yet implemented)")  # TODO: Task 2.x
+
+
+def _list_profiles_for_provider_command(provider_id: str) -> None:
+    """List all profiles for *provider_id*.
+
+    Stub — full implementation in Task 2.x.
+    """
+    print(f"(--list-profiles-for-provider {provider_id}: not yet implemented)")  # TODO: Task 2.x
+
+
+def _launch_configure_wizard() -> None:
+    """Launch the interactive guided configuration wizard (Mode B).
+
+    Stub — full implementation in Task 4.1.
+    """
+    if HAS_QUESTIONARY:
+        print("Interactive wizard not yet implemented.")
+    else:
+        print(
+            "No flags provided. Run with --help to see available options.\n"
+            "(Interactive wizard requires 'questionary' — pip install questionary)"
+        )
 
