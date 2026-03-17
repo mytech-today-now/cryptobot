@@ -36,7 +36,7 @@ from typing import Optional
 # Optional runtime dependencies (resolved in later tasks)
 # ---------------------------------------------------------------------------
 try:
-    from dotenv import load_dotenv, set_key as dotenv_set_key
+    from dotenv import load_dotenv, set_key as dotenv_set_key, unset_key as dotenv_unset_key
     HAS_DOTENV = True
 except ImportError:  # pragma: no cover
     HAS_DOTENV = False
@@ -720,7 +720,104 @@ def provider_edit_command(provider_id: str, profile_name: str) -> None:
         provider_id:  The registered provider identifier.
         profile_name: The name of the existing profile to edit.
     """
-    ...  # TODO: Task 2.5
+    ensure_providers()
+
+    # Validate provider is registered
+    descriptor = _provider_registry.get(provider_id)
+    if descriptor is None:
+        registered = ", ".join(sorted(_provider_registry)) or "(none)"
+        print(
+            f"Error: Provider '{provider_id}' is not registered. "
+            f"Available providers: {registered}",
+            file=sys.stderr,
+        )
+        return
+
+    # Resolve env-var names
+    profile_key_env_var = f"{descriptor.env_key_prefix}_{profile_name.upper()}_API_KEY"
+    model_env_var = f"{descriptor.env_key_prefix}_MODEL"
+    current_key = os.environ.get(profile_key_env_var, "").strip()
+    current_model = os.environ.get(model_env_var, "").strip()
+
+    # Profile must exist when the provider requires an API key
+    if descriptor.requires_api_key and not current_key:
+        print(
+            f"Error: Profile '{profile_name}' for provider '{provider_id}' does not exist. "
+            f"(Expected env variable: {profile_key_env_var})",
+            file=sys.stderr,
+        )
+        return
+
+    new_key = current_key
+    new_model = current_model
+
+    if HAS_QUESTIONARY:
+        # Prompt for new API key (blank = keep existing)
+        if descriptor.requires_api_key:
+            new_key_input = questionary.password(
+                f"New API key for '{profile_name}' (leave blank to keep current):"
+            ).ask()
+            if new_key_input is None:
+                print("Aborted.", file=sys.stderr)
+                return
+            if new_key_input.strip():
+                new_key = new_key_input.strip()
+
+        # Prompt for model override (blank = keep existing)
+        default_hint = current_model or descriptor.default_model or "default"
+        new_model_input = questionary.text(
+            f"Model override (current: '{default_hint}', blank to keep):"
+        ).ask()
+        if new_model_input is None:
+            print("Aborted.", file=sys.stderr)
+            return
+        if new_model_input.strip():
+            new_model = new_model_input.strip()
+    else:
+        print(
+            "Error: 'questionary' is required for interactive editing. "
+            "Install it with:  pip install questionary",
+            file=sys.stderr,
+        )
+        return
+
+    # Persist only changed values
+    if HAS_DOTENV:
+        _DOTENV_PATH.touch(exist_ok=True)
+        if new_key and new_key != current_key:
+            dotenv_set_key(str(_DOTENV_PATH), profile_key_env_var, new_key)
+        if new_model != current_model:
+            dotenv_set_key(str(_DOTENV_PATH), model_env_var, new_model)
+    else:
+        print(
+            "Warning: python-dotenv is not installed — changes not persisted to .env.",
+            file=sys.stderr,
+        )
+
+    # Confirm success (masked API key)
+    masked_key = mask_api_key(new_key) if new_key else "(not set)"
+    model_display = new_model or descriptor.default_model or "(default)"
+
+    if HAS_RICH:
+        console = Console()
+        info_table = Table(show_header=False, box=None, padding=(0, 1))
+        info_table.add_column("Field", style="bold")
+        info_table.add_column("Value")
+        info_table.add_row("Provider:", descriptor.display_name)
+        info_table.add_row("Profile Name:", profile_name)
+        info_table.add_row("API Key:", masked_key)
+        info_table.add_row("Model:", model_display)
+        console.print(
+            Panel(
+                info_table,
+                title="[bold cyan]✓ Profile Updated[/bold cyan]",
+                border_style="cyan",
+            )
+        )
+    else:
+        print(f"Profile '{profile_name}' updated for provider '{descriptor.display_name}'.")
+        print(f"  API Key: {masked_key}")
+        print(f"  Model  : {model_display}")
 
 
 def provider_delete_command(provider_id: str, profile_name: str) -> None:
@@ -733,7 +830,73 @@ def provider_delete_command(provider_id: str, profile_name: str) -> None:
         provider_id:  The registered provider identifier.
         profile_name: The name of the profile to delete.
     """
-    ...  # TODO: Task 2.5
+    ensure_providers()
+
+    # Validate provider is registered
+    descriptor = _provider_registry.get(provider_id)
+    if descriptor is None:
+        registered = ", ".join(sorted(_provider_registry)) or "(none)"
+        print(
+            f"Error: Provider '{provider_id}' is not registered. "
+            f"Available providers: {registered}",
+            file=sys.stderr,
+        )
+        return
+
+    # Resolve the per-profile API key env-var name
+    profile_key_env_var = f"{descriptor.env_key_prefix}_{profile_name.upper()}_API_KEY"
+    current_key = os.environ.get(profile_key_env_var, "").strip()
+
+    # Profile must have a key for providers that require one
+    if descriptor.requires_api_key and not current_key:
+        print(
+            f"Error: Profile '{profile_name}' for provider '{provider_id}' does not exist. "
+            f"(Expected env variable: {profile_key_env_var})",
+            file=sys.stderr,
+        )
+        return
+
+    # Confirm deletion before removing anything
+    if HAS_QUESTIONARY:
+        confirmed = questionary.confirm(
+            f"Delete profile '{profile_name}' for provider '{provider_id}'? "
+            "This cannot be undone."
+        ).ask()
+        if not confirmed:
+            print("Aborted: profile not deleted.")
+            return
+    else:
+        response = input(
+            f"Delete profile '{profile_name}' for provider '{provider_id}'? [y/N]: "
+        )
+        if response.strip().lower() not in ("y", "yes"):
+            print("Aborted: profile not deleted.")
+            return
+
+    # Remove only the targeted profile API key; leave all other .env vars intact
+    if HAS_DOTENV:
+        _DOTENV_PATH.touch(exist_ok=True)
+        dotenv_unset_key(str(_DOTENV_PATH), profile_key_env_var)
+    else:
+        print(
+            "Warning: python-dotenv is not installed — cannot remove key from .env.",
+            file=sys.stderr,
+        )
+
+    if HAS_RICH:
+        console = Console()
+        console.print(
+            Panel(
+                f"Profile [bold]{profile_name}[/bold] for provider "
+                f"[bold]{descriptor.display_name}[/bold] has been deleted.",
+                title="[bold red]✓ Profile Deleted[/bold red]",
+                border_style="red",
+            )
+        )
+    else:
+        print(
+            f"Profile '{profile_name}' deleted for provider '{descriptor.display_name}'."
+        )
 
 
 def provider_activate_command(provider_id: str, profile_name: str) -> None:

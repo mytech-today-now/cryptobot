@@ -723,17 +723,31 @@ def _run_gui_loop() -> int:
                     )
                     continue
 
-                # Show current provider status panel
-                provider_status_command()
+                # Inner KeyboardInterrupt guard: Ctrl+C inside the provider
+                # sub-menu or wizard returns to the main menu, not exits.
+                try:
+                    # Show current provider status panel
+                    provider_status_command()
 
-                sub_action = questionary.select(
-                    "AI Providers — Options",
-                    choices=["Run guided setup", "Back"],
-                ).ask()
+                    sub_action = questionary.select(
+                        "AI Providers — Options",
+                        choices=["Run guided setup", "Back"],
+                    ).ask()
 
-                if sub_action == "Run guided setup":
-                    _ai_configure_command(ConfigureOptions())
-                # "Back" or None (Ctrl+C) both fall through to main menu loop
+                    # None means Ctrl+C inside questionary — go back to menu
+                    if sub_action is None:
+                        continue
+
+                    if sub_action == "Run guided setup":
+                        try:
+                            _ai_configure_command(ConfigureOptions())
+                        except KeyboardInterrupt:
+                            print("\n(Setup interrupted — returning to main menu)")
+                    # "Back" falls through to the top of the while loop
+
+                except KeyboardInterrupt:
+                    print("\n(Returning to main menu…)")
+                    continue
 
         except KeyboardInterrupt:
             print("\nGoodbye!")
