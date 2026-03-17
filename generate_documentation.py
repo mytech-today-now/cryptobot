@@ -58,6 +58,13 @@ try:
 except ImportError:
     HAS_JINJA2 = False
 
+# questionary is optional — required for --gui interactive menus
+try:
+    import questionary
+    HAS_QUESTIONARY = True
+except ImportError:  # pragma: no cover
+    HAS_QUESTIONARY = False
+
 # Logger will be configured in main() based on verbosity
 logger = logging.getLogger(__name__)
 
@@ -648,6 +655,91 @@ def _resolve_ai_context(required: bool = False):
         return None, None
 
 
+def _run_gui_loop() -> int:
+    """Run the interactive GUI main loop using questionary.
+
+    Presents a main menu with an **AI Providers** entry.  Selecting it
+    calls :func:`ai_providers.provider_status_command` to show current
+    status, then offers a sub-menu:
+
+    * **Run guided setup** — launches :func:`ai_providers.configure_command`
+      with a bare :class:`ai_providers.ConfigureOptions` (no flags) to start
+      the interactive wizard.
+    * **Back** — returns to the main menu.
+
+    Returns:
+        Exit code — ``0`` on clean exit, ``1`` when ``questionary`` is absent.
+    """
+    if not HAS_QUESTIONARY:
+        print(
+            "Error: 'questionary' is required for --gui mode. "
+            "Install it with:  pip install questionary",
+            file=sys.stderr,
+        )
+        return 1
+
+    # Import AI provider helpers (gracefully degrade when unavailable)
+    try:
+        from ai_providers import (
+            provider_status_command,
+            configure_command as _ai_configure_command,
+            ConfigureOptions,
+        )
+        _has_ai = True
+    except ImportError:  # pragma: no cover
+        _has_ai = False
+
+    _MENU_CHOICES = [
+        "Generate Documentation",
+        "AI Providers",
+        "Exit",
+    ]
+
+    while True:
+        try:
+            action = questionary.select(
+                "Crypto Bot — Main Menu",
+                choices=_MENU_CHOICES,
+            ).ask()
+
+            # None is returned when the user hits Ctrl+C inside questionary
+            if action is None or action == "Exit":
+                print("Goodbye!")
+                return 0
+
+            elif action == "Generate Documentation":
+                # Placeholder — full GUI-based generation wired in a later task
+                print(
+                    "(Generate Documentation is not yet available from the GUI. "
+                    "Use:  python generate_documentation.py [flags])"
+                )
+
+            elif action == "AI Providers":
+                if not _has_ai:
+                    print(
+                        "Warning: ai_providers module is not available. "
+                        "Ensure ai_providers.py is on the Python path.",
+                        file=sys.stderr,
+                    )
+                    continue
+
+                # Show current provider status panel
+                provider_status_command()
+
+                sub_action = questionary.select(
+                    "AI Providers — Options",
+                    choices=["Run guided setup", "Back"],
+                ).ask()
+
+                if sub_action == "Run guided setup":
+                    _ai_configure_command(ConfigureOptions())
+                # "Back" or None (Ctrl+C) both fall through to main menu loop
+
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            return 0
+
+
 def main():
     """Main entry point"""
     # Get script directory for default paths
@@ -699,6 +791,15 @@ Examples:
             'AI-powered generation: resolves the active AI provider/profile '
             'via the provider abstraction layer before running. '
             'Exits with a clear error when no provider is configured.'
+        ),
+    )
+
+    parser.add_argument(
+        '--gui',
+        action='store_true',
+        help=(
+            'Launch the interactive GUI menu loop (requires questionary). '
+            'Presents a menu with AI Providers management and document generation options.'
         ),
     )
 
@@ -839,6 +940,12 @@ Examples:
         )
         result = configure_command(options)
         return result if isinstance(result, int) else 0
+
+    # ------------------------------------------------------------------
+    # Dispatch: --gui interactive menu loop (early return)
+    # ------------------------------------------------------------------
+    if getattr(args, 'gui', False):
+        return _run_gui_loop()
 
     # Configure logging based on verbosity
     log_level = logging.INFO

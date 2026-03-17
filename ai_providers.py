@@ -596,15 +596,117 @@ def provider_create_command(
     """Create a new provider profile.
 
     In interactive mode prompts for credentials via ``questionary``.
-    Writes settings to ``.env`` via ``dotenv.set_key()`` only.
+    Non-interactive mode uses the API key from the environment (if set) and
+    exits with an error when the key is required but missing.
+    Writes settings to ``.env`` via ``dotenv.set_key()`` only — never a
+    full-file overwrite.
     Confirms success with a ``rich`` panel.
 
     Args:
         provider_id:  The registered provider identifier (e.g. ``"anthropic"``).
         profile_name: The name for the new profile (e.g. ``"personal"``).
-        interactive:  When ``True``, prompt for any missing credentials.
+        interactive:  When ``True``, prompt for any missing credentials via
+                      ``questionary``.  Defaults to ``True``.
     """
-    ...  # TODO: Task 2.4
+    ensure_providers()
+
+    # ------------------------------------------------------------------ #
+    # 1. Validate that the provider is registered                         #
+    # ------------------------------------------------------------------ #
+    descriptor = _provider_registry.get(provider_id)
+    if descriptor is None:
+        registered = ", ".join(sorted(_provider_registry)) or "(none)"
+        print(
+            f"Error: Provider '{provider_id}' is not registered. "
+            f"Available providers: {registered}",
+            file=sys.stderr,
+        )
+        return
+
+    # ------------------------------------------------------------------ #
+    # 2. Resolve the API key                                              #
+    # ------------------------------------------------------------------ #
+    profile_key_env_var = f"{descriptor.env_key_prefix}_{profile_name.upper()}_API_KEY"
+    fallback_key_env_var = f"{descriptor.env_key_prefix}_API_KEY"
+
+    # Prefer named-profile key, fall back to the generic key
+    api_key = os.environ.get(profile_key_env_var, "").strip()
+    if not api_key:
+        api_key = os.environ.get(fallback_key_env_var, "").strip()
+
+    if not api_key and descriptor.requires_api_key:
+        if interactive and HAS_QUESTIONARY:
+            prompted = questionary.password(
+                f"Enter API key for {descriptor.display_name} profile '{profile_name}':"
+            ).ask()
+            if not prompted:
+                print("Aborted: API key is required.", file=sys.stderr)
+                return
+            api_key = prompted.strip()
+        else:
+            print(
+                f"Error: API key for provider '{provider_id}' profile '{profile_name}' "
+                f"is not set. Expected environment variable: {profile_key_env_var}",
+                file=sys.stderr,
+            )
+            return
+
+    # ------------------------------------------------------------------ #
+    # 3. Optionally prompt for model override                             #
+    # ------------------------------------------------------------------ #
+    model: str = ""
+    if interactive and HAS_QUESTIONARY:
+        default_model = descriptor.default_model or ""
+        model_input = questionary.text(
+            f"Model override (leave blank to use default '{default_model}'):"
+        ).ask()
+        model = model_input.strip() if model_input else ""
+
+    # ------------------------------------------------------------------ #
+    # 4. Persist to .env via dotenv.set_key()                             #
+    # ------------------------------------------------------------------ #
+    if HAS_DOTENV:
+        # Ensure the .env file exists so set_key can create it if absent
+        _DOTENV_PATH.touch(exist_ok=True)
+        if api_key:
+            dotenv_set_key(str(_DOTENV_PATH), profile_key_env_var, api_key)
+        if model:
+            model_env_var = f"{descriptor.env_key_prefix}_MODEL"
+            dotenv_set_key(str(_DOTENV_PATH), model_env_var, model)
+    else:
+        print(
+            "Warning: python-dotenv is not installed — credentials not persisted to .env.",
+            file=sys.stderr,
+        )
+
+    # ------------------------------------------------------------------ #
+    # 5. Confirm success with a rich panel (API key always masked)        #
+    # ------------------------------------------------------------------ #
+    masked_key = mask_api_key(api_key) if api_key else "(not set)"
+    model_display = model or descriptor.default_model or "(default)"
+
+    if HAS_RICH:
+        console = Console()
+        info_table = Table(show_header=False, box=None, padding=(0, 1))
+        info_table.add_column("Field", style="bold")
+        info_table.add_column("Value")
+        info_table.add_row("Provider:", descriptor.display_name)
+        info_table.add_row("Profile Name:", profile_name)
+        info_table.add_row("API Key:", masked_key)
+        info_table.add_row("Model:", model_display)
+        info_table.add_row("Env Variable:", profile_key_env_var)
+        console.print(
+            Panel(
+                info_table,
+                title="[bold green]✓ Profile Created[/bold green]",
+                border_style="green",
+            )
+        )
+    else:
+        print(f"Profile '{profile_name}' created for provider '{descriptor.display_name}'.")
+        print(f"  API Key     : {masked_key}")
+        print(f"  Model       : {model_display}")
+        print(f"  Env Variable: {profile_key_env_var}")
 
 
 def provider_edit_command(provider_id: str, profile_name: str) -> None:
