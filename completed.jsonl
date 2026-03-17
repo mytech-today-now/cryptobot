@@ -1,0 +1,2 @@
+{"id":"cryptobot-dhn","title":"[Phase 1 / Task 1.1] Create ai_providers.py Skeleton","closed_at":"2026-03-17T15:36:34Z","close_reason":"Task 1.1 complete: ai_providers.py skeleton created. All public stubs present with type hints and docstrings. Import and py_compile verified.","deliverable":"ai_providers.py"}
+{"id":"cryptobot-2b9","title":"AI-PROVIDER-001: Configurable AI Provider Layer","closed_at":"2026-03-17T15:36:34Z","close_reason":"Epic closed: Phase 1 / Task 1.1 skeleton delivered. Remaining phases tracked via dependent tasks.","deliverable":"ai_providers.py"}
