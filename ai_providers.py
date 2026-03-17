@@ -19,9 +19,9 @@ Key design rules:
   registry or store access.
 
 Change ID : AI-PROVIDER-001
-Phase     : 1–3 — Foundation, CLI Dispatch, Built-in Providers
-Tasks     : 1.1–1.4, 2.1–2.2, 3.1–3.2
-Version   : 0.5.0
+Phase     : 1–3 — Foundation, CLI Dispatch, Built-in Providers, Masking
+Tasks     : 1.1–1.4, 2.1–2.3, 3.1–3.3
+Version   : 0.6.0
 """
 
 from __future__ import annotations
@@ -522,8 +522,70 @@ def provider_list_command() -> None:
     Columns: ID | Display Name | Status (active/inactive) | Profile Count.
     The active provider row is highlighted.  No API keys appear in output.
     Calls :func:`ensure_providers` before accessing the registry.
+
+    Profile Count is derived from environment variables of the form
+    ``<PREFIX>_<PROFILE_NAME>_API_KEY`` in :data:`_api_key_store`, excluding
+    the plain ``<PREFIX>_API_KEY`` default key.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> provider_list_command()  # prints table with 5 built-in providers
     """
-    ...  # TODO: Task 2.3
+    ensure_providers()
+
+    active_provider_id = os.environ.get("AI_ACTIVE_PROVIDER", "").strip()
+
+    def _count_profiles(descriptor: ProviderDescriptor) -> int:
+        """Count named profile entries for *descriptor* in ``_api_key_store``."""
+        prefix = descriptor.env_key_prefix
+        plain_key = f"{prefix}_API_KEY"
+        return sum(
+            1
+            for k in _api_key_store
+            if k.startswith(f"{prefix}_") and k.endswith("_API_KEY") and k != plain_key
+        )
+
+    if HAS_RICH:
+        console = Console()
+        table = Table(
+            title="Registered AI Providers",
+            show_header=True,
+            header_style="bold cyan",
+        )
+        table.add_column("ID", style="dim", no_wrap=True)
+        table.add_column("Display Name")
+        table.add_column("Status", justify="center")
+        table.add_column("Profile Count", justify="right")
+
+        for provider_id, descriptor in sorted(_provider_registry.items()):
+            is_active = provider_id == active_provider_id
+            status_markup = (
+                "[bold green]active[/bold green]" if is_active else "[dim]inactive[/dim]"
+            )
+            row_style = "bold green" if is_active else ""
+            table.add_row(
+                provider_id,
+                descriptor.display_name,
+                status_markup,
+                str(_count_profiles(descriptor)),
+                style=row_style,
+            )
+
+        console.print(table)
+    else:
+        # Fallback plain-text path (no rich installed)
+        header = f"{'ID':<15} {'Display Name':<25} {'Status':<10} {'Profiles':>8}"
+        print(header)
+        print("-" * len(header))
+        for provider_id, descriptor in sorted(_provider_registry.items()):
+            is_active = provider_id == active_provider_id
+            marker = "* " if is_active else "  "
+            status = "active" if is_active else "inactive"
+            count = _count_profiles(descriptor)
+            print(
+                f"{marker}{provider_id:<13} {descriptor.display_name:<25} {status:<10} {count:>8}"
+            )
 
 
 def provider_create_command(
@@ -587,12 +649,70 @@ def provider_activate_command(provider_id: str, profile_name: str) -> None:
 def provider_status_command() -> None:
     """Print a ``rich`` panel showing the active provider and profile.
 
-    Displays: active provider ID, display name, profile name, masked API
-    key, and configured model.  Shows a ``"No active provider"`` message
-    when ``AI_ACTIVE_PROVIDER`` is unset.  Safe to call when ``.env`` is
-    empty or missing.
+    Displays: active provider ID, display name, profile name, **masked** API
+    key (via :func:`mask_api_key`), and configured model.  Shows a
+    ``"No active provider"`` message when ``AI_ACTIVE_PROVIDER`` is unset.
+    Safe to call when ``.env`` is empty or missing.
+
+    API keys are **never** shown in raw form — :func:`mask_api_key` is
+    applied at this output boundary unconditionally.
+
+    Example::
+
+        >>> _reset_for_tests()
+        >>> provider_status_command()  # prints "No active provider" panel
     """
-    ...  # TODO: Task 4.2
+    ensure_providers()
+
+    try:
+        descriptor = resolve_active_provider()
+        profile = get_active_profile()
+        masked_key = mask_api_key(profile.api_key)
+        model_display = profile.model or descriptor.default_model or "(not set)"
+
+        if HAS_RICH:
+            console = Console()
+            info_table = Table(show_header=False, box=None, padding=(0, 1))
+            info_table.add_column("Field", style="bold")
+            info_table.add_column("Value")
+            info_table.add_row("Provider ID:", descriptor.provider_id)
+            info_table.add_row("Display Name:", descriptor.display_name)
+            info_table.add_row("Profile:", profile.profile_name)
+            info_table.add_row("API Key:", masked_key)
+            info_table.add_row("Model:", model_display)
+            if profile.base_url:
+                info_table.add_row("Base URL:", profile.base_url)
+            console.print(
+                Panel(
+                    info_table,
+                    title="[bold]Active AI Provider[/bold]",
+                    border_style="cyan",
+                )
+            )
+        else:
+            print("=== Active AI Provider ===")
+            print(f"  Provider ID : {descriptor.provider_id}")
+            print(f"  Display Name: {descriptor.display_name}")
+            print(f"  Profile     : {profile.profile_name}")
+            print(f"  API Key     : {masked_key}")
+            print(f"  Model       : {model_display}")
+            if profile.base_url:
+                print(f"  Base URL    : {profile.base_url}")
+
+    except (ProviderNotConfiguredError, ProfileNotFoundError) as exc:
+        if HAS_RICH:
+            console = Console()
+            console.print(
+                Panel(
+                    f"[yellow]{exc}[/yellow]\n\n"
+                    "Run: [bold]python generate_documentation.py configure "
+                    "--activate-profile <provider>/<profile>[/bold]",
+                    title="[bold yellow]No Active Provider[/bold yellow]",
+                    border_style="yellow",
+                )
+            )
+        else:
+            print(f"No active provider configured: {exc}")
 
 
 def configure_command(options: ConfigureOptions) -> int:
